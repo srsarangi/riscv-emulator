@@ -2,11 +2,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include<math.h>
 
 //xreg will contain the value of the thirty-two registers x0 - x31
 long xreg[32];
 
-// rd stores destination register, rs1 and rs2 store the source registers and imm is the immediate
+// xd stores destination register, x1 and x2 store the source registers and imm is the immediate
 long xd, x1, x2, imm;
 
 // m stores the modifier, isImm stores whether the instruction contains an immediate
@@ -37,7 +38,7 @@ void invalidInst(void);
 int dec(char ch);
 
 // An array used to convert a hexadecimal immediate to decimal
-int hexImm[4];
+int hexImm[8];
 
 
 // sets pc for the main function
@@ -303,6 +304,24 @@ void executeInstruction(void)
 						}
 					}
 				}
+		case 'o': if(inst[i+1] == 'r')
+				{
+						i = i + 2;
+						if(inst[i] == ' ' || inst[i] == '\t')  //OR
+						{
+							++i;
+							m = 0;
+							getReg3Add(inst, i);
+								xreg[xd] = xreg[x1]|xreg[x2];
+						}
+						else if(inst[i] == 'i' && (inst[i+1] == ' ' || inst[i+1] == '\t'))
+						{
+							++i;
+							m = 0;
+							getReg3Add(inst, i);
+								xreg[xd] = xreg[x1]|imm;
+						}
+					}
 		case 'a': if(inst[i+2] == 'd')
 				{
 					if(inst[i+1] == 'd')	//ADD
@@ -382,6 +401,88 @@ void executeInstruction(void)
 							invalidInst();	//subu and rs2 are incompatible
 					}
 				}
+				else if (inst[i + 1] =='l' && inst[i + 2] =='l')
+				{
+					i = i + 3;
+					if (inst[i] == ' ' || inst[i] == '\t')  //shift left logical
+					{
+						++i;
+						m = 0;
+						getReg3Add(inst, i);
+						if (isImm)
+							invalidInst();
+						else
+							xreg[xd] = xreg[x1] <<xreg[x2];
+					}
+					else if (inst[i] == 'i' && (inst[i+1] == ' ' || inst[i+1] == '\t'))  //subi
+					{
+						i = i + 2;
+						m = 1;
+						getReg3Add(inst, i);
+						if (isImm)
+							xreg[xd] = xreg[x1]<<imm;
+						else
+							invalidInst();
+					}
+				}
+				else if (inst[i + 1] =='r' && inst[i + 2] =='l')
+		         {
+		        	i = i + 3;
+			     if (inst[i] == ' ' || inst[i] == '\t')  //shift right logical
+			    {
+				    ++i;
+			    	m = 0;
+				    getReg3Add(inst, i);
+				   if (isImm)
+					invalidInst();
+				   else
+				   {
+					  unsigned long int b;
+					   if (xreg[x1] < 0)
+						   b = 4294967296+xreg[x1];
+					   xreg[xd] = b >> xreg[x2];
+				   }
+			     }
+			     else if (inst[i] == 'i' && (inst[i + 1] == ' ' || inst[i + 1] == '\t'))  //srli
+			     {
+				   i = i + 2;
+				   m = 1;
+				   getReg3Add(inst, i);
+				   if (isImm)
+				   {
+					   unsigned long int b;
+					   if (xreg[x1] < 0)
+						   b = 4294967296+xreg[x1];
+					   xreg[xd] = b >> imm;
+				   }
+				else
+					invalidInst();
+			     }
+		        }
+				else if (inst[i + 1] =='r' && inst[i + 2] =='a')
+		         {
+			       i = i + 3;
+			       if (inst[i] == ' ' || inst[i] == '\t')  //shift left arithmetic
+			       {
+				    ++i;
+				    m = 0;
+				    getReg3Add(inst, i);
+				    if (isImm)
+					invalidInst();
+				    else
+					xreg[xd] = xreg[x1] >> xreg[x2];
+			        }
+			       else if (inst[i] == 'i' && (inst[i + 1] == ' ' || inst[i + 1] == '\t'))  //srai
+			       {
+				   i = i + 2;
+				   m = 1;
+				   getReg3Add(inst, i);
+				   if (isImm)
+					xreg[xd] = xreg[x1] << imm;
+				   else
+					invalidInst();
+			}
+		}
 				
 					
 				
@@ -459,7 +560,7 @@ void getReg3Add(char* inst, int i)
 		i++;
 	if(inst[i] == 's' && inst[i+1] == 'p')
 	{
-		xd = 30;
+		xd = 2;
 		i += 2;
 	}
 	else
@@ -499,7 +600,7 @@ void getReg3Add(char* inst, int i)
 		i++;
 	if(inst[i] == 's' && inst[i+1] == 'p')
 	{
-		x1 = 30;
+		x1 = 2;
 		i += 2;
 	}
 	else
@@ -539,7 +640,7 @@ void getReg3Add(char* inst, int i)
 		i++;
 	if(inst[i] == 's' && inst[i+1] == 'p')
 	{
-		x2 = 30;
+		x2 = 2;
 		i += 2;
 		isImm = 0;
 	}
@@ -577,7 +678,7 @@ void getReg3Add(char* inst, int i)
 		if(inst[i] == '\0')
 			invalidInst();
 		int hexIndex = 0;
-		while(inst[i] != '\0' && hexIndex < 4)
+		while((inst[i]>='0'&&inst[i]<='9')|| (inst[i] >= 'A' && inst[i] <= 'F')|| (inst[i] >= 'a' && inst[i] <= 'f'))
 		{
 			hexImm[hexIndex++] = dec(inst[i++]);
 			while(inst[i] == ' ' || inst[i] == '\t')
