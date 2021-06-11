@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
 
 	//Code for opening the file and computing the size of the program
 	long int size;
-	FILE* f = fopen(argv[1], "r");		// argv[1] is the name of the file in which the program is written
+	FILE* f = fopen("BEQ.asm", "r");		// argv[1] is the name of the file in which the program is written
 	if(f == 0)
 	{
 		printf("Could not read file!!!\n");
@@ -414,7 +414,7 @@ void executeInstruction(void)
 						else
 							xreg[xd] = xreg[x1] <<xreg[x2];
 					}
-					else if (inst[i] == 'i' && (inst[i+1] == ' ' || inst[i+1] == '\t'))  //subi
+					else if (inst[i] == 'i' && (inst[i+1] == ' ' || inst[i+1] == '\t'))  //slli
 					{
 						i = i + 2;
 						m = 1;
@@ -502,6 +502,141 @@ void executeInstruction(void)
 					else
 						invalidInst();
 					}
+
+		case 'b': if(inst[i+1] == ' ' || inst[i+1] == '\t')		// B
+				{
+					i += 2;
+					while(inst[i] == ' ' || inst[i] == '\t')
+						++i;
+					// Reading the label which b has to jump to
+					int label_init = i;
+					while(inst[i] != '\0' && inst[i] != ' ' && inst[i] != '\t')
+						++i;
+					pc = getPcForLabel(str, b+label_init, b+i) - 1;  // Subtract 1 so that after the instruction, when pc is incremented with pc++ we will reach the correct instruction
+				}
+
+
+				else if(inst[i+1] == 'e' && inst[i+2] == 'q' && (inst[i+3] == ' ' || inst[i+3] == '\t'))		//BEQ
+				{
+
+					i += 4;
+					while(inst[i] == ' ' || inst[i] == '\t')
+						++i;
+
+					//
+					if(inst[i] == 's' && inst[i+1] == 'p')
+					{
+						xd = 30;
+						i += 2;
+					}
+					else
+					{
+						if(inst[i] != 'x')
+							invalidInst();
+						++i;
+						if(inst[i] == 'a')
+						{
+							xd = 31;
+							++i;
+						}
+						else if(isdigit(inst[i]))
+						{
+							xd = inst[i] - '0';
+							++i;
+							if(isdigit(inst[i]))
+							{
+								xd = xd*10 + (inst[i] - '0');
+								++i;
+							}
+						}
+						else
+							invalidInst();
+					}
+					if(xd < 0 || xd > 31)
+						invalidInst();
+
+
+					//Code to extract register number of rs2/imm
+					while(inst[i] == ' ' || inst[i] == '\t')
+						i++;
+					if(inst[i] != ',')
+						invalidInst();
+					++i;
+					while(inst[i] == ' ' || inst[i] == '\t')
+						i++;
+
+					if(inst[i] == 's' && inst[i+1] == 'p')
+					{
+						x2 = 30;
+						i += 2;
+						isImm = 0;
+					}
+					
+					else if(inst[i] == 'x')	// if we have rs2
+					{
+						++i;
+						if(inst[i] == 'a')
+						{
+							x2 = 31;
+							++i;
+							isImm = 0;
+						}
+						else if(isdigit(inst[i]))
+						{
+							x2 = inst[i] - '0';
+							++i;
+							if(isdigit(inst[i]))
+							{
+								x2 = x2*10 + (inst[i] - '0');
+								++i;
+							}
+							isImm = 0;	//since the instruction does not have an immediate
+						}
+						else
+							invalidInst();
+						if(x2 < 0 || x2 > 31)
+							invalidInst();
+					}
+					int kg =i;
+					int three=3;
+					while(three>0){
+						printf("%c",inst[i]);
+						i++;
+						three--;
+					}
+					// Reading the label which beq has to jump to
+					if(xreg[xd]==xreg[x2]){
+						int label_init = i;
+						while(inst[i] != '\0' && inst[i] != ' ' && inst[i] != '\t')
+							++i;
+						pc = getPcForLabel(str, b+label_init, b+i) - 1;  // Subtract 1 so that after the instruction, when pc is incremented with pc++ we will reach the correct instruction
+					}
+				}
+
+
+				/*else if(inst[i+1] == 'g' && inst[i+2] == 't' && (inst[i+3] == ' ' || inst[i+3] == '\t'))		//BGT
+				{
+					if(flags[1])
+					{
+						i += 4;
+						while(inst[i] == ' ' || inst[i] == '\t')
+							++i;
+						// Reading the label which bgt has to jump to
+						int label_init = i;
+						while(inst[i] != '\0' && inst[i] != ' ' && inst[i] != '\t')
+							++i;
+						pc = getPcForLabel(str, b+label_init, b+i) - 1;  // Subtract 1 so that after the instruction, when pc is incremented with pc++ we will reach the correct instruction
+					}
+				}
+
+				else
+					invalidInst();
+
+				break;
+			*/
+
+
+
         case '.':  if(inst[i+1] == 'p' && inst[i+2] == 'r' && inst[i+3] == 'i' && inst[i+4] == 'n' && inst[i+5] == 't' && (inst[i+6] == ' ' || inst[i+6] == '\t'))	// .print
 				{
 					i += 7;
@@ -747,7 +882,7 @@ void getReg3Add(char* inst, int i)
 
 void getReg2Add(char* inst, int i)
 {
-	//Code to extract register number of rd
+	//Code to extract register number of xd
 	while(inst[i] == ' ' || inst[i] == '\t')
 		i++;
 	if(inst[i] == 's' && inst[i+1] == 'p')
