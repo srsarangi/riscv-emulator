@@ -1092,15 +1092,90 @@ void executeInstruction(void)
 					else
 						invalidInst();
 					}
-
+		
 		case 'b': if(inst[i+1] == 'e' && inst[i+2] == 'q' && (inst[i+3] == ' ' || inst[i+3] == '\t'))		//BEQ
 				{
-					if(flags[0])
+					i += 4;
+					while(inst[i] == ' ' || inst[i] == '\t')
+						++i;
+					if(inst[i] == 's' && inst[i+1] == 'p')
 					{
-						i += 4;
-						while(inst[i] == ' ' || inst[i] == '\t')
+						xd = 30;
+						i += 2;
+					}
+					else
+					{
+						if(inst[i] != 'x')
+							invalidInst();
+						++i;
+						if(inst[i] == 'a')
+						{
+							xd = 31;
 							++i;
-						// Reading the label which beq has to jump to
+						}
+						else if(isdigit(inst[i]))
+						{
+							xd = inst[i] - '0';
+							++i;
+							if(isdigit(inst[i]))
+							{
+								xd = xd*10 + (inst[i] - '0');
+								++i;
+							}
+						}
+						else
+							invalidInst();
+					}
+					if(xd < 0 || xd > 31)
+						invalidInst();
+
+
+					//Code to extract register number of rs2/imm
+					while(inst[i] == ' ' || inst[i] == '\t')
+						i++;
+					if(inst[i] != ',')
+						invalidInst();
+					++i;
+					while(inst[i] == ' ' || inst[i] == '\t')
+						i++;
+
+					if(inst[i] == 's' && inst[i+1] == 'p')
+					{
+						x2 = 30;
+						i += 2;
+						isImm = 0;
+					}
+					
+					else if(inst[i] == 'x')	// if we have rs2
+					{
+						++i;
+						if(inst[i] == 'a')
+						{
+							x2 = 31;
+							++i;
+							isImm = 0;
+						}
+						else if(isdigit(inst[i]))
+						{
+							x2 = inst[i] - '0';
+							++i;
+							if(isdigit(inst[i]))
+							{
+								x2 = x2*10 + (inst[i] - '0');
+								++i;
+							}
+							isImm = 0;	//since the instruction does not have an immediate
+						}
+						else
+							invalidInst();
+						if(x2 < 0 || x2 > 31)
+							invalidInst();
+					}
+					
+					// Reading the label which beq has to jump to
+					if(xreg[xd]==xreg[x2])
+					{
+						++i;
 						int label_init = i;
 						while(inst[i] != '\0' && inst[i] != ' ' && inst[i] != '\t')
 							++i;
@@ -1108,12 +1183,88 @@ void executeInstruction(void)
 					}
 				}
 
-
 				else if(inst[i+1] == 'g' && inst[i+2] == 't' && (inst[i+3] == ' ' || inst[i+3] == '\t'))		//BGT
 				{
-					if(flags[1])
+					i += 4;
+					while(inst[i] == ' ' || inst[i] == '\t')
+						++i;
+					if(inst[i] == 's' && inst[i+1] == 'p')
 					{
-						i += 4;
+						xd = 30;
+						i += 2;
+					}
+					else
+					{
+						if(inst[i] != 'x')
+							invalidInst();
+						++i;
+						if(inst[i] == 'a')
+						{
+							xd = 31;
+							++i;
+						}
+						else if(isdigit(inst[i]))
+						{
+							xd = inst[i] - '0';
+							++i;
+							if(isdigit(inst[i]))
+							{
+								xd = xd*10 + (inst[i] - '0');
+								++i;
+							}
+						}
+						else
+							invalidInst();
+					}
+					if(xd < 0 || xd > 31)
+						invalidInst();
+
+
+					//Code to extract register number of rs2/imm
+					while(inst[i] == ' ' || inst[i] == '\t')
+						i++;
+					if(inst[i] != ',')
+						invalidInst();
+					++i;
+					while(inst[i] == ' ' || inst[i] == '\t')
+						i++;
+
+					if(inst[i] == 's' && inst[i+1] == 'p')
+					{
+						x2 = 30;
+						i += 2;
+						isImm = 0;
+					}
+					
+					else if(inst[i] == 'x')	// if we have rs2
+					{
+						++i;
+						if(inst[i] == 'a')
+						{
+							x2 = 31;
+							++i;
+							isImm = 0;
+						}
+						else if(isdigit(inst[i]))
+						{
+							x2 = inst[i] - '0';
+							++i;
+							if(isdigit(inst[i]))
+							{
+								x2 = x2*10 + (inst[i] - '0');
+								++i;
+							}
+							isImm = 0;	//since the instruction does not have an immediate
+						}
+						else
+							invalidInst();
+						if(x2 < 0 || x2 > 31)
+							invalidInst();
+					}
+					
+					if(xreg[xd]>xreg[x2])
+					{
+						i ++;
 						while(inst[i] == ' ' || inst[i] == '\t')
 							++i;
 						// Reading the label which bgt has to jump to
@@ -1124,11 +1275,471 @@ void executeInstruction(void)
 					}
 				}
 
-				else
-					invalidInst();
+				else if(inst[i+1] == 'g' && inst[i+2] == 't' && inst[i+3] == 'u' && (inst[i+3] == ' ' || inst[i+3] == '\t'))		//BGTU
+				{
+					i += 4;
+					while(inst[i] == ' ' || inst[i] == '\t')
+						++i;
+					if(inst[i] == 's' && inst[i+1] == 'p')
+					{
+						xd = 30;
+						i += 2;
+					}
+					else
+					{
+						if(inst[i] != 'x')
+							invalidInst();
+						++i;
+						if(inst[i] == 'a')
+						{
+							xd = 31;
+							++i;
+						}
+						else if(isdigit(inst[i]))
+						{
+							xd = inst[i] - '0';
+							++i;
+							if(isdigit(inst[i]))
+							{
+								xd = xd*10 + (inst[i] - '0');
+								++i;
+							}
+						}
+						else
+							invalidInst();
+					}
+					if(xd < 0 || xd > 31)
+						invalidInst();
 
-				break;
 
+					//Code to extract register number of rs2/imm
+					while(inst[i] == ' ' || inst[i] == '\t')
+						i++;
+					if(inst[i] != ',')
+						invalidInst();
+					++i;
+					while(inst[i] == ' ' || inst[i] == '\t')
+						i++;
+
+					if(inst[i] == 's' && inst[i+1] == 'p')
+					{
+						x2 = 30;
+						i += 2;
+						isImm = 0;
+					}
+					
+					else if(inst[i] == 'x')	// if we have rs2
+					{
+						++i;
+						if(inst[i] == 'a')
+						{
+							x2 = 31;
+							++i;
+							isImm = 0;
+						}
+						else if(isdigit(inst[i]))
+						{
+							x2 = inst[i] - '0';
+							++i;
+							if(isdigit(inst[i]))
+							{
+								x2 = x2*10 + (inst[i] - '0');
+								++i;
+							}
+							isImm = 0;	//since the instruction does not have an immediate
+						}
+						else
+							invalidInst();
+						if(x2 < 0 || x2 > 31)
+							invalidInst();
+					}
+					
+					if(xreg[xd]>xreg[x2])
+					{
+						i ++;
+						while(inst[i] == ' ' || inst[i] == '\t')
+							++i;
+						// Reading the label which bgt has to jump to
+						int label_init = i;
+						while(inst[i] != '\0' && inst[i] != ' ' && inst[i] != '\t')
+							++i;
+						pc = getPcForLabel(str, b+label_init, b+i) - 1;  // Subtract 1 so that after the instruction, when pc is incremented with pc++ we will reach the correct instruction
+					}
+				}
+
+
+
+				else if(inst[i+1] == 'g' && inst[i+2] == 'e' && (inst[i+3] == ' ' || inst[i+3] == '\t'))		//BGT
+				{
+					i += 4;
+					while(inst[i] == ' ' || inst[i] == '\t')
+						++i;
+					if(inst[i] == 's' && inst[i+1] == 'p')
+					{
+						xd = 30;
+						i += 2;
+					}
+					else
+					{
+						if(inst[i] != 'x')
+							invalidInst();
+						++i;
+						if(inst[i] == 'a')
+						{
+							xd = 31;
+							++i;
+						}
+						else if(isdigit(inst[i]))
+						{
+							xd = inst[i] - '0';
+							++i;
+							if(isdigit(inst[i]))
+							{
+								xd = xd*10 + (inst[i] - '0');
+								++i;
+							}
+						}
+						else
+							invalidInst();
+					}
+					if(xd < 0 || xd > 31)
+						invalidInst();
+
+
+					//Code to extract register number of rs2/imm
+					while(inst[i] == ' ' || inst[i] == '\t')
+						i++;
+					if(inst[i] != ',')
+						invalidInst();
+					++i;
+					while(inst[i] == ' ' || inst[i] == '\t')
+						i++;
+
+					if(inst[i] == 's' && inst[i+1] == 'p')
+					{
+						x2 = 30;
+						i += 2;
+						isImm = 0;
+					}
+					
+					else if(inst[i] == 'x')	// if we have rs2
+					{
+						++i;
+						if(inst[i] == 'a')
+						{
+							x2 = 31;
+							++i;
+							isImm = 0;
+						}
+						else if(isdigit(inst[i]))
+						{
+							x2 = inst[i] - '0';
+							++i;
+							if(isdigit(inst[i]))
+							{
+								x2 = x2*10 + (inst[i] - '0');
+								++i;
+							}
+							isImm = 0;	//since the instruction does not have an immediate
+						}
+						else
+							invalidInst();
+						if(x2 < 0 || x2 > 31)
+							invalidInst();
+					}
+					
+					if(xreg[xd]>=xreg[x2])
+					{
+						i ++;
+						while(inst[i] == ' ' || inst[i] == '\t')
+							++i;
+						// Reading the label which bgt has to jump to
+						int label_init = i;
+						while(inst[i] != '\0' && inst[i] != ' ' && inst[i] != '\t')
+							++i;
+						pc = getPcForLabel(str, b+label_init, b+i) - 1;  // Subtract 1 so that after the instruction, when pc is incremented with pc++ we will reach the correct instruction
+					}
+				}
+
+				else if(inst[i+1] == 'n' && inst[i+2] == 'e' && (inst[i+3] == ' ' || inst[i+3] == '\t'))		//BGT
+				{
+					i += 4;
+					while(inst[i] == ' ' || inst[i] == '\t')
+						++i;
+					if(inst[i] == 's' && inst[i+1] == 'p')
+					{
+						xd = 30;
+						i += 2;
+					}
+					else
+					{
+						if(inst[i] != 'x')
+							invalidInst();
+						++i;
+						if(inst[i] == 'a')
+						{
+							xd = 31;
+							++i;
+						}
+						else if(isdigit(inst[i]))
+						{
+							xd = inst[i] - '0';
+							++i;
+							if(isdigit(inst[i]))
+							{
+								xd = xd*10 + (inst[i] - '0');
+								++i;
+							}
+						}
+						else
+							invalidInst();
+					}
+					if(xd < 0 || xd > 31)
+						invalidInst();
+
+
+					//Code to extract register number of rs2/imm
+					while(inst[i] == ' ' || inst[i] == '\t')
+						i++;
+					if(inst[i] != ',')
+						invalidInst();
+					++i;
+					while(inst[i] == ' ' || inst[i] == '\t')
+						i++;
+
+					if(inst[i] == 's' && inst[i+1] == 'p')
+					{
+						x2 = 30;
+						i += 2;
+						isImm = 0;
+					}
+					
+					else if(inst[i] == 'x')	// if we have rs2
+					{
+						++i;
+						if(inst[i] == 'a')
+						{
+							x2 = 31;
+							++i;
+							isImm = 0;
+						}
+						else if(isdigit(inst[i]))
+						{
+							x2 = inst[i] - '0';
+							++i;
+							if(isdigit(inst[i]))
+							{
+								x2 = x2*10 + (inst[i] - '0');
+								++i;
+							}
+							isImm = 0;	//since the instruction does not have an immediate
+						}
+						else
+							invalidInst();
+						if(x2 < 0 || x2 > 31)
+							invalidInst();
+					}
+					
+					if(xreg[xd]!=xreg[x2])
+					{
+						i ++;
+						while(inst[i] == ' ' || inst[i] == '\t')
+							++i;
+						// Reading the label which bgt has to jump to
+						int label_init = i;
+						while(inst[i] != '\0' && inst[i] != ' ' && inst[i] != '\t')
+							++i;
+						pc = getPcForLabel(str, b+label_init, b+i) - 1;  // Subtract 1 so that after the instruction, when pc is incremented with pc++ we will reach the correct instruction
+					}
+				}
+
+				else if(inst[i+1] == 'l' && inst[i+2] == 't' && (inst[i+3] == ' ' || inst[i+3] == '\t'))		//BGT
+				{
+					i += 4;
+					while(inst[i] == ' ' || inst[i] == '\t')
+						++i;
+					if(inst[i] == 's' && inst[i+1] == 'p')
+					{
+						xd = 30;
+						i += 2;
+					}
+					else
+					{
+						if(inst[i] != 'x')
+							invalidInst();
+						++i;
+						if(inst[i] == 'a')
+						{
+							xd = 31;
+							++i;
+						}
+						else if(isdigit(inst[i]))
+						{
+							xd = inst[i] - '0';
+							++i;
+							if(isdigit(inst[i]))
+							{
+								xd = xd*10 + (inst[i] - '0');
+								++i;
+							}
+						}
+						else
+							invalidInst();
+					}
+					if(xd < 0 || xd > 31)
+						invalidInst();
+
+
+					//Code to extract register number of rs2/imm
+					while(inst[i] == ' ' || inst[i] == '\t')
+						i++;
+					if(inst[i] != ',')
+						invalidInst();
+					++i;
+					while(inst[i] == ' ' || inst[i] == '\t')
+						i++;
+
+					if(inst[i] == 's' && inst[i+1] == 'p')
+					{
+						x2 = 30;
+						i += 2;
+						isImm = 0;
+					}
+					
+					else if(inst[i] == 'x')	// if we have rs2
+					{
+						++i;
+						if(inst[i] == 'a')
+						{
+							x2 = 31;
+							++i;
+							isImm = 0;
+						}
+						else if(isdigit(inst[i]))
+						{
+							x2 = inst[i] - '0';
+							++i;
+							if(isdigit(inst[i]))
+							{
+								x2 = x2*10 + (inst[i] - '0');
+								++i;
+							}
+							isImm = 0;	//since the instruction does not have an immediate
+						}
+						else
+							invalidInst();
+						if(x2 < 0 || x2 > 31)
+							invalidInst();
+					}
+					
+					if(xreg[xd]<xreg[x2])
+					{
+						i ++;
+						while(inst[i] == ' ' || inst[i] == '\t')
+							++i;
+						// Reading the label which bgt has to jump to
+						int label_init = i;
+						while(inst[i] != '\0' && inst[i] != ' ' && inst[i] != '\t')
+							++i;
+						pc = getPcForLabel(str, b+label_init, b+i) - 1;  // Subtract 1 so that after the instruction, when pc is incremented with pc++ we will reach the correct instruction
+					}
+				}
+
+				else if(inst[i+1] == 'l' && inst[i+2] == 'e' && (inst[i+3] == ' ' || inst[i+3] == '\t'))		//BGT
+				{
+					i += 4;
+					while(inst[i] == ' ' || inst[i] == '\t')
+						++i;
+					if(inst[i] == 's' && inst[i+1] == 'p')
+					{
+						xd = 30;
+						i += 2;
+					}
+					else
+					{
+						if(inst[i] != 'x')
+							invalidInst();
+						++i;
+						if(inst[i] == 'a')
+						{
+							xd = 31;
+							++i;
+						}
+						else if(isdigit(inst[i]))
+						{
+							xd = inst[i] - '0';
+							++i;
+							if(isdigit(inst[i]))
+							{
+								xd = xd*10 + (inst[i] - '0');
+								++i;
+							}
+						}
+						else
+							invalidInst();
+					}
+					if(xd < 0 || xd > 31)
+						invalidInst();
+
+
+					//Code to extract register number of rs2/imm
+					while(inst[i] == ' ' || inst[i] == '\t')
+						i++;
+					if(inst[i] != ',')
+						invalidInst();
+					++i;
+					while(inst[i] == ' ' || inst[i] == '\t')
+						i++;
+
+					if(inst[i] == 's' && inst[i+1] == 'p')
+					{
+						x2 = 30;
+						i += 2;
+						isImm = 0;
+					}
+					
+					else if(inst[i] == 'x')	// if we have rs2
+					{
+						++i;
+						if(inst[i] == 'a')
+						{
+							x2 = 31;
+							++i;
+							isImm = 0;
+						}
+						else if(isdigit(inst[i]))
+						{
+							x2 = inst[i] - '0';
+							++i;
+							if(isdigit(inst[i]))
+							{
+								x2 = x2*10 + (inst[i] - '0');
+								++i;
+							}
+							isImm = 0;	//since the instruction does not have an immediate
+						}
+						else
+							invalidInst();
+						if(x2 < 0 || x2 > 31)
+							invalidInst();
+					}
+					
+					if(xreg[xd]<=xreg[x2])
+					{
+						i ++;
+						while(inst[i] == ' ' || inst[i] == '\t')
+							++i;
+						// Reading the label which bgt has to jump to
+						int label_init = i;
+						while(inst[i] != '\0' && inst[i] != ' ' && inst[i] != '\t')
+							++i;
+						pc = getPcForLabel(str, b+label_init, b+i) - 1;  // Subtract 1 so that after the instruction, when pc is incremented with pc++ we will reach the correct instruction
+					}
+				}
+
+
+
+		
 
 
         case '.':  if(inst[i+1] == 'p' && inst[i+2] == 'r' && inst[i+3] == 'i' && inst[i+4] == 'n' && inst[i+5] == 't' && (inst[i+6] == ' ' || inst[i+6] == '\t'))	// .print
