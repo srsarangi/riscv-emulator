@@ -2,13 +2,16 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include<math.h>
+#include <math.h>
 
 //xreg will contain the value of the thirty-two registers x0 - x31
-long xreg[32];
+long long xreg[32];
 
 // xd stores destination register, x1 and x2 store the source registers and imm is the immediate
-long xd, x1, x2, imm;
+long long xd, x1, x2, imm;
+
+// Data Memory of 4096 bytes
+long long Mem[512];
 
 // m stores the modifier, isImm stores whether the instruction contains an immediate
 int m;
@@ -20,12 +23,15 @@ char* str;
 // Executes the instruction depending upon the value of pc
 void executeInstruction(void);
 
+// Stores the register numbers of a ld/st instruction in rd, rs1 and imm
+void getLdSt(char* inst, int i);
 
 // Stores the register numbers of a 3-address instruction in rd, rs1 and rs2 or imm
 //void getReg3Add(char* inst, int i);
 
 // Stores the register numbers of a 2-address instruction in rd and rs2 or imm
 void getReg2Add(char* inst, int i);
+
 
 // Stores the register numbers of a 3-address instruction in rd, rs1 and rs2 or imm
 void getReg3Add(char* inst, int i);
@@ -39,8 +45,6 @@ int dec(char ch);
 // An array used to convert a hexadecimal immediate to decimal
 int hexImm[8];
 
-// encodedInst will contain the encoding of an instruction
-unsigned int encodedInst;
 
 // sets pc for the main function
 void setPcForMain(void);
@@ -84,10 +88,12 @@ struct label *labels;
 
 int main(int argc, char* argv[])
 {
+
 	k = 1;
+
 	//Code for opening the file and computing the size of the program
 	long int size;
-	FILE* f = fopen("BEQ.asm", "r");		// argv[1] is the name of the file in which the program is written
+	FILE* f = fopen(argv[1], "r");		// argv[1] is the name of the file in which the program is written
 	if(f == 0)
 	{
 		printf("Could not read file!!!\n");
@@ -99,6 +105,7 @@ int main(int argc, char* argv[])
 		size = ftell(f);		// ftell gives the position of f which is EOF and hence returns the length of the file
 	}
 	size = size + 2;			// We add 2 to accomodate for an extra '\n' and a '\0'
+	
 	// Code for storing the whole program into the string str
 	str = malloc(size*(sizeof(char)));
 	rewind(f);					// Brings f to the beginning of the file
@@ -195,7 +202,7 @@ int main(int argc, char* argv[])
 				}
 				if(str[j] == '\n' || j == -1)
 					labels[lab_no++].inst_no = pc;		// There is no instruction in the line of this label
-     			else
+				else
 				{
 					labels[lab_no++].inst_no = pc+1;	// There is an instruction before this label in the same line but label points to the next line
 					instructions[pc].i = i;
@@ -238,7 +245,6 @@ int main(int argc, char* argv[])
 		else
 			x++;
 	}
-
 	int inst_count = pc;
 	lab_count = lab_no;
 	setPcForMain();
@@ -413,7 +419,7 @@ void executeInstruction(void)
 						else
 							xreg[xd] = xreg[x1] <<xreg[x2];
 					}
-					else if (inst[i] == 'i' && (inst[i+1] == ' ' || inst[i+1] == '\t'))  //slli
+					else if (inst[i] == 'i' && (inst[i+1] == ' ' || inst[i+1] == '\t'))  //subi
 					{
 						i = i + 2;
 						m = 1;
@@ -436,7 +442,7 @@ void executeInstruction(void)
 					invalidInst();
 				   else
 				   {
-					   unsigned long int b;
+					  unsigned long int b;
 					   if (xreg[x1] < 0)
 						   b = 4294967296+xreg[x1];
 					   xreg[xd] = b >> xreg[x2];
@@ -482,7 +488,595 @@ void executeInstruction(void)
 					invalidInst();
 			}
 		}
+		        else if(inst[i+1] == 'b' && (inst[i+2] == ' ' || inst[i+2] == '\t'))		// STORE BYTE
+				{
+					i += 3;
+					int y;
+					getLdSt(inst, i);
+					y=(xreg[x1]+imm)%8;
+					xreg[xd]=xreg[xd]&0x00000000000000ff;
+					switch(y)
+					{
+					case 7:
+					    Mem[(xreg[x1]+imm)/8] = Mem[(xreg[x1]+imm)/8]&0x00ffffffffffffff;
+						Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[xd]<<56);
+						break;
+					case 6:
+					    Mem[(xreg[x1]+imm)/8] = Mem[(xreg[x1]+imm)/8]&0xff00ffffffffffff;
+						Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[xd]<<48);
+						break;
+					case 5:
+					    Mem[(xreg[x1]+imm)/8] = Mem[(xreg[x1]+imm)/8]&0xffff00ffffffffff;
+						Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[xd]<<40);
+						break;
+					case 4:
+					    Mem[(xreg[x1]+imm)/8] = Mem[(xreg[x1]+imm)/8]&0xffffff00ffffffff;
+						Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[xd]<<32);
+						break;
+					case 3:
+					    Mem[(xreg[x1]+imm)/8] = Mem[(xreg[x1]+imm)/8]&0xffffffff00ffffff;
+						Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[xd]<<24);
+						break;
+					case 2:
+					    Mem[(xreg[x1]+imm)/8] = Mem[(xreg[x1]+imm)/8]&0xffffffffff00ffff;
+						Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[xd]<<16);
+						break;
+					case 1:
+					    Mem[(xreg[x1]+imm)/8] = Mem[(xreg[x1]+imm)/8]&0xffffffffffff00ff;
+						Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[xd]<<8);
+						break;
+					case 0:
+					    Mem[(xreg[x1]+imm)/8] = Mem[(xreg[x1]+imm)/8]&0xffffffffffffff00;
+						Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|xreg[xd];
+						break;
+					}
+				}
+				else if(inst[i+1] == 'h' && (inst[i+2] == ' ' || inst[i+2] == '\t'))		// STORE HALFWORD
+				{
+					i += 3;
+					getLdSt(inst, i);
+					xreg[xd]=xreg[xd]&0x000000000000ffff;
+					int y;
+					y=(xreg[x1]+imm)%8;
+					switch(y)
+					{
+					case 7:
+					    Mem[(xreg[x1]+imm)/8] = Mem[(xreg[x1]+imm)/8]&0x00ffffffffffffff;
+						Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[xd]<<56);
+						Mem[(xreg[x1]+imm)/8+1] = Mem[(xreg[x1]+imm)/8+1]&0xffffffffffffff00;
+						Mem[(xreg[x1]+imm)/8+1]=Mem[(xreg[x1]+imm)/8+1]|(xreg[xd]>>8);
+						break;
+					case 6:
+					    Mem[(xreg[x1]+imm)/8] = Mem[(xreg[x1]+imm)/8]&0x0000ffffffffffff;
+						Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[xd]<<48);
+						break;
+					case 5:
+					    Mem[(xreg[x1]+imm)/8] = Mem[(xreg[x1]+imm)/8]&0xff0000ffffffffff;
+						Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[xd]<<40);
+						break;
+					case 4:
+					    Mem[(xreg[x1]+imm)/8] = Mem[(xreg[x1]+imm)/8]&0xffff0000ffffffff;
+						Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[xd]<<32);
+						break;
+					case 3:
+					    Mem[(xreg[x1]+imm)/8] = Mem[(xreg[x1]+imm)/8]&0xffffff0000ffffff;
+						Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[xd]<<24);
+						break;
+					case 2:
+					    Mem[(xreg[x1]+imm)/8] = Mem[(xreg[x1]+imm)/8]&0xffffffff0000ffff;
+						Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[xd]<<16);
+						break;
+					case 1:
+					    Mem[(xreg[x1]+imm)/8] = Mem[(xreg[x1]+imm)/8]&0xffffffffff0000ff;
+						Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[xd]<<8);
+						break;
+					case 0:
+					    Mem[(xreg[x1]+imm)/8] = Mem[(xreg[x1]+imm)/8]&0xffffffffffff0000;
+						Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[xd]);
+						break;
+					}
+				}
+				else if(inst[i+1] == 'w' && (inst[i+2] == ' ' || inst[i+2] == '\t'))		// STORE WORD
+				{
+					i += 3;
+					getLdSt(inst, i);
+					xreg[xd]=xreg[xd]&0x00000000ffffffff;
+					int y;
+					y=(xreg[x1]+imm)%8;
+					switch(y)
+					{
+					case 7:
+					    Mem[(xreg[x1]+imm)/8] = Mem[(xreg[x1]+imm)/8]&0x00ffffffffffffff;
+						Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[xd]<<56);
+						Mem[(xreg[x1]+imm)/8+1] = Mem[(xreg[x1]+imm)/8+1]&0xffffffffff000000;
+						Mem[(xreg[x1]+imm)/8+1]=Mem[(xreg[x1]+imm)/8+1]|(xreg[xd]>>8);
+						break;
+					case 6:
+					    Mem[(xreg[x1]+imm)/8] = Mem[(xreg[x1]+imm)/8]&0x0000ffffffffffff;
+						Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[xd]<<48);
+						Mem[(xreg[x1]+imm)/8+1] = Mem[(xreg[x1]+imm)/8+1]&0xffffffffffff0000;
+						Mem[(xreg[x1]+imm)/8+1]=Mem[(xreg[x1]+imm)/8+1]|(xreg[xd]>>16);
+						break;
+					case 5:
+					    Mem[(xreg[x1]+imm)/8] = Mem[(xreg[x1]+imm)/8]&0x000000ffffffffff;
+						Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[xd]<<40);
+						Mem[(xreg[x1]+imm)/8+1] = Mem[(xreg[x1]+imm)/8+1]&0xffffffffffffff00;
+						Mem[(xreg[x1]+imm)/8+1]=Mem[(xreg[x1]+imm)/8+1]|(xreg[xd]>>24);
+						break;
+					case 4:
+					    Mem[(xreg[x1]+imm)/8] = Mem[(xreg[x1]+imm)/8]&0x00000000ffffffff;
+						Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[xd]<<32);
+						break;
+					case 3:
+					    Mem[(xreg[x1]+imm)/8] = Mem[(xreg[x1]+imm)/8]&0xff00000000ffffff;
+						Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[xd]<<24);
+						break;
+					case 2:
+					    Mem[(xreg[x1]+imm)/8] = Mem[(xreg[x1]+imm)/8]&0xffff00000000ffff;
+						Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[xd]<<16);
+						break;
+					case 1:
+					    Mem[(xreg[x1]+imm)/8] = Mem[(xreg[x1]+imm)/8]&0xffffff00000000ff;
+						Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[xd]<<8);
+						break;
+					case 0:
+					    Mem[(xreg[x1]+imm)/8] = Mem[(xreg[x1]+imm)/8]&0xffffffff00000000;
+						Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[xd]);
+						break;
+				}
+
+				}
+				else if(inst[i+1] == 'd' && (inst[i+2] == ' ' || inst[i+2] == '\t'))		// STORE DOUBLEWORD
+				{
+                  i=i+3;
+				  getLdSt(inst, i);
+				  int y;
+				  y=(xreg[x1]+imm)%8;
+				  switch(y)
+				  {
+					  case 7:
+					     Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]&0x00ffffffffffffff;
+						 Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[x1]<<y*56);
+						 Mem[(xreg[x1]+imm)/8+1]=Mem[(xreg[x1]+imm)/8+1]&0xff00000000000000;
+						 Mem[(xreg[x1]+imm)/8+1]=Mem[(xreg[x1]+imm)/8+1]|(xreg[x1]>>8);
+						 break;
+					  case 6:
+					     Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]&0x0000ffffffffffff;
+						 Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[x1]<<48);
+						 Mem[(xreg[x1]+imm)/8+1]=Mem[(xreg[x1]+imm)/8+1]&0xffff000000000000;
+						 Mem[(xreg[x1]+imm)/8+1]=Mem[(xreg[x1]+imm)/8+1]|(xreg[x1]>>16);
+						 break;
+					  case 5:
+					     Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]&0x000000ffffffffff;
+						 Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[x1]<<40);
+						 Mem[(xreg[x1]+imm)/8+1]=Mem[(xreg[x1]+imm)/8+1]&0xffffff0000000000;
+						 Mem[(xreg[x1]+imm)/8+1]=Mem[(xreg[x1]+imm)/8+1]|(xreg[x1]>>24);
+						 break;
+					  case 4:
+					     Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]&0x00000000ffffffff;
+						 Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[x1]<<32);
+						 Mem[(xreg[x1]+imm)/8+1]=Mem[(xreg[x1]+imm)/8+1]&0xffffffff00000000;
+						 Mem[(xreg[x1]+imm)/8+1]=Mem[(xreg[x1]+imm)/8+1]|(xreg[x1]>>32);
+						 break;
+					  case 3:
+					     Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]&0x0000000000ffffff;
+						 Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[x1]<<24);
+						 Mem[(xreg[x1]+imm)/8+1]=Mem[(xreg[x1]+imm)/8+1]&0xffffffffff000000;
+						 Mem[(xreg[x1]+imm)/8+1]=Mem[(xreg[x1]+imm)/8+1]|(xreg[x1]>>40);
+						 break;
+					  case 2:
+					     Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]&0x000000000000ffff;
+						 Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[x1]<<16);
+						 Mem[(xreg[x1]+imm)/8+1]=Mem[(xreg[x1]+imm)/8+1]&0xffffffffffff0000;
+						 Mem[(xreg[x1]+imm)/8+1]=Mem[(xreg[x1]+imm)/8+1]|(xreg[x1]>>48);
+						 break;
+					  case 1:
+					     Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]&0x00000000000000ff;
+						 Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[x1]<<8);
+						 Mem[(xreg[x1]+imm)/8+1]=Mem[(xreg[x1]+imm)/8+1]&0xffffffffffffff00;
+						 Mem[(xreg[x1]+imm)/8+1]=Mem[(xreg[x1]+imm)/8+1]|(xreg[x1]>>56);
+						 break;
+					  case 0:
+					     Mem[(xreg[x1]+imm)/8]=xreg[xd];
+				  }
+				}
+
 				
+		case 'l': if(inst[i+1]=='b'&&(inst[i+2]==' '||inst[i+2]=='\t'))
+		           {
+					   i=i+3;
+					   while(inst[i]==' '||inst[i]=='\t')
+					   ++i;
+					   getLdSt(inst, i);
+					   int y;
+					   y=(xreg[x1]+imm)%8;
+					   xreg[xd]=xreg[xd]&0;
+					   xreg[xd]=xreg[xd]|Mem[(xreg[x1]+imm)/8];
+					switch(y)
+					{
+					case 7:
+					    xreg[xd]=xreg[xd]&0xff00000000000000;
+						xreg[xd]=xreg[xd]>>56;
+						break;
+					case 6:
+					    xreg[xd]=xreg[xd]&0x00ff000000000000;
+						xreg[xd]=xreg[xd]>>48;
+						break;
+					case 5:
+					    xreg[xd]=xreg[xd]&0x0000ff0000000000;
+						xreg[xd]=xreg[xd]>>40;
+						break;
+					case 4:
+					    xreg[xd]=xreg[xd]&0x000000ff00000000;
+						xreg[xd]=xreg[xd]>>32;
+						break;
+					case 3:
+					    xreg[xd]=xreg[xd]&0x00000000ff000000;
+						xreg[xd]=xreg[xd]>>24;
+						break;
+					case 2:
+					    xreg[xd]=xreg[xd]&0x0000000000ff0000;
+						xreg[xd]=xreg[xd]>>16;
+						break;
+					case 1:
+					    xreg[xd]=xreg[xd]&0x0000000000000ff00;
+						xreg[xd]=xreg[xd]>>8;
+						break;
+					case 0:
+					    xreg[xd]=xreg[xd]&0x00000000000000ff;
+						break;
+					}
+					if(xreg[xd]>127)
+					xreg[xd]-=256;
+
+				   }			
+				   else if(inst[i+1]=='h'&&(inst[i+2]==' '||inst[i+2]=='\t'))
+		           {
+					   i=i+3;
+					   while(inst[i]==' '||inst[i]=='\t')
+					   ++i;
+					   int y;
+					   getLdSt(inst, i);
+					   y=(xreg[x1]+imm)%8;
+					   xreg[xd]=xreg[xd]&0;
+					   xreg[xd]=xreg[xd]|Mem[(xreg[x1]+imm)/8];
+					switch(y)
+					{
+					case 7:
+					    xreg[xd]=xreg[xd]&0xff00000000000000;
+						xreg[xd]=xreg[xd]>>56;
+						int c=0;
+						c=c|Mem[(xreg[x1]+imm)/8+1];
+						c=c&0x00000000000000ff;
+						c=c<<8;
+						xreg[xd]=xreg[xd]|c;
+						break;
+					case 6:
+					    xreg[xd]=xreg[xd]&0xffff000000000000;
+						xreg[xd]=xreg[xd]>>48;
+						break;
+					case 5:
+					    xreg[xd]=xreg[xd]&0x00ffff0000000000;
+						xreg[xd]=xreg[xd]>>40;
+						break;
+					case 4:
+					    xreg[xd]=xreg[xd]&0x0000ffff00000000;
+						xreg[xd]=xreg[xd]>>32;
+						break;
+					case 3:
+					    xreg[xd]=xreg[xd]&0x000000ffff000000;
+						xreg[xd]=xreg[xd]>>24;
+						break;
+					case 2:
+					    xreg[xd]=xreg[xd]&0x00000000ffff0000;
+						xreg[xd]=xreg[xd]>>16;
+						break;
+					case 1:
+					    xreg[xd]=xreg[xd]&0x00000000000ffff00;
+						xreg[xd]=xreg[xd]>>8;
+						break;
+					case 0:
+					    xreg[xd]=xreg[xd]&0x000000000000ffff;
+						break;
+					}
+					if(xreg[xd]>32767)
+					xreg[xd]-=65536;
+				   }
+				    else if(inst[i+1]=='w'&&(inst[i+2]==' '||inst[i+2]=='\t'))
+		           {
+					   i=i+3;
+					   long long c=0;
+					   while(inst[i]==' '||inst[i]=='\t')
+					   ++i;
+					   int y;
+					   getLdSt(inst, i);
+					   y=(xreg[x1]+imm)%8;
+					   xreg[xd]=xreg[xd]&0;
+					   xreg[xd]=xreg[xd]|Mem[(xreg[x1]+imm)/8];
+					switch(y)
+					{
+					case 7:
+					    xreg[xd]=xreg[xd]&0xff00000000000000;
+						xreg[xd]=xreg[xd]>>52;
+						c=c|Mem[(xreg[x1]+imm)/8+1];
+						c=c&0x0000000000ffffff;
+						c=c<<8;
+						xreg[xd]=xreg[xd]|c;
+						break;
+					case 6:
+					    xreg[xd]=xreg[xd]&0xffff000000000000;
+						xreg[xd]=xreg[xd]>>48;
+						c=c|Mem[(xreg[x1]+imm)/8+1];
+						c=c&0x000000000000ffff;
+						c=c<<16;
+						xreg[xd]=xreg[xd]|c;
+						break;
+					case 5:
+					    xreg[xd]=xreg[xd]&0xffffff0000000000;
+						xreg[xd]=xreg[xd]>>40;
+						c=c|Mem[(xreg[x1]+imm)/8+1];
+						c=c&0x00000000000000ff;
+						c=c<<24;
+						xreg[xd]=xreg[xd]|c;
+						break;
+					case 4:
+					    xreg[xd]=xreg[xd]&0xffffffff00000000;
+						xreg[xd]=xreg[xd]>>32;
+						break;
+					case 3:
+					    xreg[xd]=xreg[xd]&0x00ffffffff000000;
+						xreg[xd]=xreg[xd]>>24;
+						break;
+					case 2:
+					    xreg[xd]=xreg[xd]&0x0000ffffffff0000;
+						xreg[xd]=xreg[xd]>>16;
+						break;
+					case 1:
+					    xreg[xd]=xreg[xd]&0x0000000ffffffff00;
+						xreg[xd]=xreg[xd]>>8;
+						break;
+					case 0:
+					    xreg[xd]=xreg[xd]&0x00000000ffffffff;
+						break;
+					}
+					if(xreg[xd]>2147483647)
+					xreg[xd]-=4294967296;
+				   }
+                     else if(inst[i+1]=='d'&&(inst[i+2]==' '||inst[i+2]=='\t'))
+		           {
+					   i=i+3;
+					   getLdSt(inst,i);
+					   int y=(xreg[x1]+imm)%8;
+					   xreg[xd]=xreg[xd]&0;
+					   long long c=0;
+					   switch(y)
+					   {
+						   case 7:
+						      xreg[xd]=xreg[xd]|Mem[(xreg[x1]+imm)/8];
+							  xreg[xd]=xreg[xd]&0xff00000000000000;
+							  xreg[xd]=xreg[xd]>>56;
+							  xreg[xd]=xreg[xd]&0x00000000000000ff;
+							  c=c|Mem[(xreg[x1]+imm)/8+1];
+							  c=c<<8;
+							  xreg[xd]=xreg[xd]|c;
+							  break;
+							case 6:
+						      xreg[xd]=xreg[xd]|Mem[(xreg[x1]+imm)/8];
+							  xreg[xd]=xreg[xd]&0xffff000000000000;
+							  xreg[xd]=xreg[xd]>>48;
+							  xreg[xd]=xreg[xd]&0x000000000000ffff;
+							  c=c|Mem[(xreg[x1]+imm)/8+1];
+							  c=c<<16;
+							  xreg[xd]=xreg[xd]|c;
+							  break;
+							case 5:
+						      xreg[xd]=xreg[xd]|Mem[(xreg[x1]+imm)/8];
+							  xreg[xd]=xreg[xd]&0xffffff0000000000;
+							  xreg[xd]=xreg[xd]>>40;
+							  xreg[xd]=xreg[xd]&0x0000000000ffffff;
+							  c=c|Mem[(xreg[x1]+imm)/8+1];
+							  c=c<<24;
+							  xreg[xd]=xreg[xd]|c;
+							  break;
+							case 4:
+						      xreg[xd]=xreg[xd]|Mem[(xreg[x1]+imm)/8];
+							  xreg[xd]=xreg[xd]&0xffffffff00000000;
+							  xreg[xd]=xreg[xd]>>32;
+							  xreg[xd]=xreg[xd]&0x00000000ffffffff;
+							  c=c|Mem[(xreg[x1]+imm)/8+1];
+							  c=c<<32;
+							  xreg[xd]=xreg[xd]|c;
+							  break;
+							case 3:
+						      xreg[xd]=xreg[xd]|Mem[(xreg[x1]+imm)/8];
+							  xreg[xd]=xreg[xd]&0xffffffffff000000;
+							  xreg[xd]=xreg[xd]>>24;
+							  xreg[xd]=xreg[xd]&0x000000ffffffffff;
+							  c=c|Mem[(xreg[x1]+imm)/8+1];
+							  c=c<<40;
+							  xreg[xd]=xreg[xd]|c;
+							  break;
+							case 2:
+						      xreg[xd]=xreg[xd]|Mem[(xreg[x1]+imm)/8];
+							  xreg[xd]=xreg[xd]&0xffffffffffff0000;
+							  xreg[xd]=xreg[xd]>>16;
+							  xreg[xd]=xreg[xd]&0x0000ffffffffffff;
+							  c=c|Mem[(xreg[x1]+imm)/8+1];
+							  c=c<<48;
+							  xreg[xd]=xreg[xd]|c;
+							  break;
+							case 1:
+						      xreg[xd]=xreg[xd]|Mem[(xreg[x1]+imm)/8];
+							  xreg[xd]=xreg[xd]&0xffffffffffffff00;
+							  xreg[xd]=xreg[xd]>>8;
+							  xreg[xd]=xreg[xd]&0x00ffffffffffffff;
+							  c=c|Mem[(xreg[x1]+imm)/8+1];
+							  c=c<<56;
+							  xreg[xd]=xreg[xd]|c;
+							  break;
+							case 0:
+						      xreg[xd]=xreg[xd]|Mem[(xreg[x1]+imm)/8];
+
+					   }
+					  
+				   }
+				    else if(inst[i+1]=='b'&&inst[i+2]=='u'&&(inst[i+3]==' '||inst[i+3]=='\t'))
+		           {
+					   i=i+4;
+					   while(inst[i]==' '||inst[i]=='\t')
+					   ++i;
+					   int y;
+					   getLdSt(inst, i);
+					   y=(xreg[x1]+imm)%8;
+					   xreg[xd]=xreg[xd]&0;
+					   xreg[xd]=xreg[xd]|Mem[(xreg[x1]+imm)/8];
+					switch(y)
+					{
+					case 7:
+					    xreg[xd]=xreg[xd]&0xff00000000000000;
+						xreg[xd]=xreg[xd]>>56;
+						break;
+					case 6:
+					    xreg[xd]=xreg[xd]&0x00ff000000000000;
+						xreg[xd]=xreg[xd]>>48;
+						break;
+					case 5:
+					    xreg[xd]=xreg[xd]&0x0000ff0000000000;
+						xreg[xd]=xreg[xd]>>40;
+						break;
+					case 4:
+					    xreg[xd]=xreg[xd]&0x000000ff00000000;
+						xreg[xd]=xreg[xd]>>32;
+						break;
+					case 3:
+					    xreg[xd]=xreg[xd]&0x00000000ff000000;
+						xreg[xd]=xreg[xd]>>24;
+						break;
+					case 2:
+					    xreg[xd]=xreg[xd]&0x0000000000ff0000;
+						xreg[xd]=xreg[xd]>>16;
+						break;
+					case 1:
+					    xreg[xd]=xreg[xd]&0x0000000000000ff00;
+						xreg[xd]=xreg[xd]>>8;
+						break;
+					case 0:
+					    xreg[xd]=xreg[xd]&0x00000000000000ff;
+						break;
+					}
+
+				   }			
+				   else if(inst[i+1]=='h'&&inst[i+2]=='u'&&(inst[i+3]==' '||inst[i+3]=='\t'))
+		           {
+					   i=i+4;
+					   while(inst[i]==' '||inst[i]=='\t')
+					   ++i;
+					   int y;
+					   long long c=0;
+					   getLdSt(inst, i);
+					   y=(xreg[x1]+imm)%8;
+					   xreg[xd]=xreg[xd]&0;
+					   xreg[xd]=xreg[xd]|Mem[(xreg[x1]+imm)/8];
+					switch(y)
+					{
+					case 7:
+					    xreg[xd]=xreg[xd]&0xff00000000000000;
+						xreg[xd]=xreg[xd]>>52;
+						c=c|Mem[(xreg[x1]+imm)/8+1];
+						c=c&0x00000000000000ff;
+						c=c<<8;
+						xreg[xd]=xreg[xd]|c;
+						break;
+					case 6:
+					    xreg[xd]=xreg[xd]&0xffff000000000000;
+						xreg[xd]=xreg[xd]>>48;
+						break;
+					case 5:
+					    xreg[xd]=xreg[xd]&0x00ffff0000000000;
+						xreg[xd]=xreg[xd]>>40;
+						break;
+					case 4:
+					    xreg[xd]=xreg[xd]&0x0000ffff00000000;
+						xreg[xd]=xreg[xd]>>32;
+						break;
+					case 3:
+					    xreg[xd]=xreg[xd]&0x000000ffff000000;
+						xreg[xd]=xreg[xd]>>24;
+						break;
+					case 2:
+					    xreg[xd]=xreg[xd]&0x00000000ffff0000;
+						xreg[xd]=xreg[xd]>>16;
+						break;
+					case 1:
+					    xreg[xd]=xreg[xd]&0x00000000000ffff00;
+						xreg[xd]=xreg[xd]>>8;
+						break;
+					case 0:
+					    xreg[xd]=xreg[xd]&0x000000000000ffff;
+						break;
+					}
+				   }
+				    else if(inst[i+1]=='w'&&inst[i+2]=='u'&&(inst[i+3]==' '||inst[i+3]=='\t'))
+		           {
+					   i=i+4;
+					   while(inst[i]==' '||inst[i]=='\t')
+					   ++i;
+					   int y;
+					   getLdSt(inst, i);
+					   long long c=0;
+					   y=(xreg[x1]+imm)%8;
+					   xreg[xd]=xreg[xd]&0;
+					   xreg[xd]=xreg[xd]|Mem[(xreg[x1]+imm)/8];
+					switch(y)
+					{
+					case 7:
+					    xreg[xd]=xreg[xd]&0xff00000000000000;
+						xreg[xd]=xreg[xd]>>52;
+						c=c|Mem[(xreg[x1]+imm)/8+1];
+						c=c&0x0000000000ffffff;
+						c=c<<8;
+						xreg[xd]=xreg[xd]|c;
+						break;
+					case 6:
+					    xreg[xd]=xreg[xd]&0xffff000000000000;
+						xreg[xd]=xreg[xd]>>48;
+						c=c|Mem[(xreg[x1]+imm)/8+1];
+						c=c&0x000000000000ffff;
+						c=c<<16;
+						xreg[xd]=xreg[xd]|c;
+						break;
+					case 5:
+					    xreg[xd]=xreg[xd]&0xffffff0000000000;
+						xreg[xd]=xreg[xd]>>40;
+						c=c|Mem[(xreg[x1]+imm)/8+1];
+						c=c&0x00000000000000ff;
+						c=c<<24;
+						xreg[xd]=xreg[xd]|c;
+						break;
+					case 4:
+					    xreg[xd]=xreg[xd]&0xffffffff00000000;
+						xreg[xd]=xreg[xd]>>32;
+						break;
+					case 3:
+					    xreg[xd]=xreg[xd]&0x00ffffffff000000;
+						xreg[xd]=xreg[xd]>>24;
+						break;
+					case 2:
+					    xreg[xd]=xreg[xd]&0x0000ffffffff0000;
+						xreg[xd]=xreg[xd]>>16;
+						break;
+					case 1:
+					    xreg[xd]=xreg[xd]&0x0000000ffffffff00;
+						xreg[xd]=xreg[xd]>>8;
+						break;
+					case 0:
+					    xreg[xd]=xreg[xd]&0x00000000ffffffff;
+						break;
+					}
+				   }
+
+
+					
         case 'm':  if(inst[i+1] == 'v'){
 					i = i + 2;
 					if(inst[i] == ' ' || inst[i] == '\t')  //mv
@@ -501,176 +1095,25 @@ void executeInstruction(void)
 
 		case 'b': if(inst[i+1] == 'e' && inst[i+2] == 'q' && (inst[i+3] == ' ' || inst[i+3] == '\t'))		//BEQ
 				{
-					i += 4;
-					while(inst[i] == ' ' || inst[i] == '\t')
-						++i;
-					if(inst[i] == 's' && inst[i+1] == 'p')
+					if(flags[0])
 					{
-						xd = 30;
-						i += 2;
-					}
-					else
-					{
-						if(inst[i] != 'x')
-							invalidInst();
-						++i;
-						if(inst[i] == 'a')
-						{
-							xd = 31;
+						i += 4;
+						while(inst[i] == ' ' || inst[i] == '\t')
 							++i;
-						}
-						else if(isdigit(inst[i]))
-						{
-							xd = inst[i] - '0';
-							++i;
-							if(isdigit(inst[i]))
-							{
-								xd = xd*10 + (inst[i] - '0');
-								++i;
-							}
-						}
-						else
-							invalidInst();
-					}
-					if(xd < 0 || xd > 31)
-						invalidInst();
-
-
-					//Code to extract register number of rs2/imm
-					while(inst[i] == ' ' || inst[i] == '\t')
-						i++;
-					if(inst[i] != ',')
-						invalidInst();
-					++i;
-					while(inst[i] == ' ' || inst[i] == '\t')
-						i++;
-
-					if(inst[i] == 's' && inst[i+1] == 'p')
-					{
-						x2 = 30;
-						i += 2;
-						isImm = 0;
-					}
-					
-					else if(inst[i] == 'x')	// if we have rs2
-					{
-						++i;
-						if(inst[i] == 'a')
-						{
-							x2 = 31;
-							++i;
-							isImm = 0;
-						}
-						else if(isdigit(inst[i]))
-						{
-							x2 = inst[i] - '0';
-							++i;
-							if(isdigit(inst[i]))
-							{
-								x2 = x2*10 + (inst[i] - '0');
-								++i;
-							}
-							isImm = 0;	//since the instruction does not have an immediate
-						}
-						else
-							invalidInst();
-						if(x2 < 0 || x2 > 31)
-							invalidInst();
-					}
-					
-					// Reading the label which beq has to jump to
-					if(xreg[xd]==xreg[x2])
-					{
-						++i;
+						// Reading the label which beq has to jump to
 						int label_init = i;
 						while(inst[i] != '\0' && inst[i] != ' ' && inst[i] != '\t')
 							++i;
 						pc = getPcForLabel(str, b+label_init, b+i) - 1;  // Subtract 1 so that after the instruction, when pc is incremented with pc++ we will reach the correct instruction
 					}
 				}
+
 
 				else if(inst[i+1] == 'g' && inst[i+2] == 't' && (inst[i+3] == ' ' || inst[i+3] == '\t'))		//BGT
 				{
-					i += 4;
-					while(inst[i] == ' ' || inst[i] == '\t')
-						++i;
-					if(inst[i] == 's' && inst[i+1] == 'p')
+					if(flags[1])
 					{
-						xd = 30;
-						i += 2;
-					}
-					else
-					{
-						if(inst[i] != 'x')
-							invalidInst();
-						++i;
-						if(inst[i] == 'a')
-						{
-							xd = 31;
-							++i;
-						}
-						else if(isdigit(inst[i]))
-						{
-							xd = inst[i] - '0';
-							++i;
-							if(isdigit(inst[i]))
-							{
-								xd = xd*10 + (inst[i] - '0');
-								++i;
-							}
-						}
-						else
-							invalidInst();
-					}
-					if(xd < 0 || xd > 31)
-						invalidInst();
-
-
-					//Code to extract register number of rs2/imm
-					while(inst[i] == ' ' || inst[i] == '\t')
-						i++;
-					if(inst[i] != ',')
-						invalidInst();
-					++i;
-					while(inst[i] == ' ' || inst[i] == '\t')
-						i++;
-
-					if(inst[i] == 's' && inst[i+1] == 'p')
-					{
-						x2 = 30;
-						i += 2;
-						isImm = 0;
-					}
-					
-					else if(inst[i] == 'x')	// if we have rs2
-					{
-						++i;
-						if(inst[i] == 'a')
-						{
-							x2 = 31;
-							++i;
-							isImm = 0;
-						}
-						else if(isdigit(inst[i]))
-						{
-							x2 = inst[i] - '0';
-							++i;
-							if(isdigit(inst[i]))
-							{
-								x2 = x2*10 + (inst[i] - '0');
-								++i;
-							}
-							isImm = 0;	//since the instruction does not have an immediate
-						}
-						else
-							invalidInst();
-						if(x2 < 0 || x2 > 31)
-							invalidInst();
-					}
-					
-					if(xreg[xd]>xreg[x2])
-					{
-						i ++;
+						i += 4;
 						while(inst[i] == ' ' || inst[i] == '\t')
 							++i;
 						// Reading the label which bgt has to jump to
@@ -681,382 +1124,14 @@ void executeInstruction(void)
 					}
 				}
 
+				else
+					invalidInst();
 
-				else if(inst[i+1] == 'g' && inst[i+2] == 'e' && (inst[i+3] == ' ' || inst[i+3] == '\t'))		//BGT
-				{
-					i += 4;
-					while(inst[i] == ' ' || inst[i] == '\t')
-						++i;
-					if(inst[i] == 's' && inst[i+1] == 'p')
-					{
-						xd = 30;
-						i += 2;
-					}
-					else
-					{
-						if(inst[i] != 'x')
-							invalidInst();
-						++i;
-						if(inst[i] == 'a')
-						{
-							xd = 31;
-							++i;
-						}
-						else if(isdigit(inst[i]))
-						{
-							xd = inst[i] - '0';
-							++i;
-							if(isdigit(inst[i]))
-							{
-								xd = xd*10 + (inst[i] - '0');
-								++i;
-							}
-						}
-						else
-							invalidInst();
-					}
-					if(xd < 0 || xd > 31)
-						invalidInst();
-
-
-					//Code to extract register number of rs2/imm
-					while(inst[i] == ' ' || inst[i] == '\t')
-						i++;
-					if(inst[i] != ',')
-						invalidInst();
-					++i;
-					while(inst[i] == ' ' || inst[i] == '\t')
-						i++;
-
-					if(inst[i] == 's' && inst[i+1] == 'p')
-					{
-						x2 = 30;
-						i += 2;
-						isImm = 0;
-					}
-					
-					else if(inst[i] == 'x')	// if we have rs2
-					{
-						++i;
-						if(inst[i] == 'a')
-						{
-							x2 = 31;
-							++i;
-							isImm = 0;
-						}
-						else if(isdigit(inst[i]))
-						{
-							x2 = inst[i] - '0';
-							++i;
-							if(isdigit(inst[i]))
-							{
-								x2 = x2*10 + (inst[i] - '0');
-								++i;
-							}
-							isImm = 0;	//since the instruction does not have an immediate
-						}
-						else
-							invalidInst();
-						if(x2 < 0 || x2 > 31)
-							invalidInst();
-					}
-					
-					if(xreg[xd]>=xreg[x2])
-					{
-						i ++;
-						while(inst[i] == ' ' || inst[i] == '\t')
-							++i;
-						// Reading the label which bgt has to jump to
-						int label_init = i;
-						while(inst[i] != '\0' && inst[i] != ' ' && inst[i] != '\t')
-							++i;
-						pc = getPcForLabel(str, b+label_init, b+i) - 1;  // Subtract 1 so that after the instruction, when pc is incremented with pc++ we will reach the correct instruction
-					}
-				}
-
-				else if(inst[i+1] == 'n' && inst[i+2] == 'e' && (inst[i+3] == ' ' || inst[i+3] == '\t'))		//BGT
-				{
-					i += 4;
-					while(inst[i] == ' ' || inst[i] == '\t')
-						++i;
-					if(inst[i] == 's' && inst[i+1] == 'p')
-					{
-						xd = 30;
-						i += 2;
-					}
-					else
-					{
-						if(inst[i] != 'x')
-							invalidInst();
-						++i;
-						if(inst[i] == 'a')
-						{
-							xd = 31;
-							++i;
-						}
-						else if(isdigit(inst[i]))
-						{
-							xd = inst[i] - '0';
-							++i;
-							if(isdigit(inst[i]))
-							{
-								xd = xd*10 + (inst[i] - '0');
-								++i;
-							}
-						}
-						else
-							invalidInst();
-					}
-					if(xd < 0 || xd > 31)
-						invalidInst();
-
-
-					//Code to extract register number of rs2/imm
-					while(inst[i] == ' ' || inst[i] == '\t')
-						i++;
-					if(inst[i] != ',')
-						invalidInst();
-					++i;
-					while(inst[i] == ' ' || inst[i] == '\t')
-						i++;
-
-					if(inst[i] == 's' && inst[i+1] == 'p')
-					{
-						x2 = 30;
-						i += 2;
-						isImm = 0;
-					}
-					
-					else if(inst[i] == 'x')	// if we have rs2
-					{
-						++i;
-						if(inst[i] == 'a')
-						{
-							x2 = 31;
-							++i;
-							isImm = 0;
-						}
-						else if(isdigit(inst[i]))
-						{
-							x2 = inst[i] - '0';
-							++i;
-							if(isdigit(inst[i]))
-							{
-								x2 = x2*10 + (inst[i] - '0');
-								++i;
-							}
-							isImm = 0;	//since the instruction does not have an immediate
-						}
-						else
-							invalidInst();
-						if(x2 < 0 || x2 > 31)
-							invalidInst();
-					}
-					
-					if(xreg[xd]!=xreg[x2])
-					{
-						i ++;
-						while(inst[i] == ' ' || inst[i] == '\t')
-							++i;
-						// Reading the label which bgt has to jump to
-						int label_init = i;
-						while(inst[i] != '\0' && inst[i] != ' ' && inst[i] != '\t')
-							++i;
-						pc = getPcForLabel(str, b+label_init, b+i) - 1;  // Subtract 1 so that after the instruction, when pc is incremented with pc++ we will reach the correct instruction
-					}
-				}
-
-				else if(inst[i+1] == 'l' && inst[i+2] == 't' && (inst[i+3] == ' ' || inst[i+3] == '\t'))		//BGT
-				{
-					i += 4;
-					while(inst[i] == ' ' || inst[i] == '\t')
-						++i;
-					if(inst[i] == 's' && inst[i+1] == 'p')
-					{
-						xd = 30;
-						i += 2;
-					}
-					else
-					{
-						if(inst[i] != 'x')
-							invalidInst();
-						++i;
-						if(inst[i] == 'a')
-						{
-							xd = 31;
-							++i;
-						}
-						else if(isdigit(inst[i]))
-						{
-							xd = inst[i] - '0';
-							++i;
-							if(isdigit(inst[i]))
-							{
-								xd = xd*10 + (inst[i] - '0');
-								++i;
-							}
-						}
-						else
-							invalidInst();
-					}
-					if(xd < 0 || xd > 31)
-						invalidInst();
-
-
-					//Code to extract register number of rs2/imm
-					while(inst[i] == ' ' || inst[i] == '\t')
-						i++;
-					if(inst[i] != ',')
-						invalidInst();
-					++i;
-					while(inst[i] == ' ' || inst[i] == '\t')
-						i++;
-
-					if(inst[i] == 's' && inst[i+1] == 'p')
-					{
-						x2 = 30;
-						i += 2;
-						isImm = 0;
-					}
-					
-					else if(inst[i] == 'x')	// if we have rs2
-					{
-						++i;
-						if(inst[i] == 'a')
-						{
-							x2 = 31;
-							++i;
-							isImm = 0;
-						}
-						else if(isdigit(inst[i]))
-						{
-							x2 = inst[i] - '0';
-							++i;
-							if(isdigit(inst[i]))
-							{
-								x2 = x2*10 + (inst[i] - '0');
-								++i;
-							}
-							isImm = 0;	//since the instruction does not have an immediate
-						}
-						else
-							invalidInst();
-						if(x2 < 0 || x2 > 31)
-							invalidInst();
-					}
-					
-					if(xreg[xd]<xreg[x2])
-					{
-						i ++;
-						while(inst[i] == ' ' || inst[i] == '\t')
-							++i;
-						// Reading the label which bgt has to jump to
-						int label_init = i;
-						while(inst[i] != '\0' && inst[i] != ' ' && inst[i] != '\t')
-							++i;
-						pc = getPcForLabel(str, b+label_init, b+i) - 1;  // Subtract 1 so that after the instruction, when pc is incremented with pc++ we will reach the correct instruction
-					}
-				}
-
-				else if(inst[i+1] == 'l' && inst[i+2] == 'e' && (inst[i+3] == ' ' || inst[i+3] == '\t'))		//BGT
-				{
-					i += 4;
-					while(inst[i] == ' ' || inst[i] == '\t')
-						++i;
-					if(inst[i] == 's' && inst[i+1] == 'p')
-					{
-						xd = 30;
-						i += 2;
-					}
-					else
-					{
-						if(inst[i] != 'x')
-							invalidInst();
-						++i;
-						if(inst[i] == 'a')
-						{
-							xd = 31;
-							++i;
-						}
-						else if(isdigit(inst[i]))
-						{
-							xd = inst[i] - '0';
-							++i;
-							if(isdigit(inst[i]))
-							{
-								xd = xd*10 + (inst[i] - '0');
-								++i;
-							}
-						}
-						else
-							invalidInst();
-					}
-					if(xd < 0 || xd > 31)
-						invalidInst();
-
-
-					//Code to extract register number of rs2/imm
-					while(inst[i] == ' ' || inst[i] == '\t')
-						i++;
-					if(inst[i] != ',')
-						invalidInst();
-					++i;
-					while(inst[i] == ' ' || inst[i] == '\t')
-						i++;
-
-					if(inst[i] == 's' && inst[i+1] == 'p')
-					{
-						x2 = 30;
-						i += 2;
-						isImm = 0;
-					}
-					
-					else if(inst[i] == 'x')	// if we have rs2
-					{
-						++i;
-						if(inst[i] == 'a')
-						{
-							x2 = 31;
-							++i;
-							isImm = 0;
-						}
-						else if(isdigit(inst[i]))
-						{
-							x2 = inst[i] - '0';
-							++i;
-							if(isdigit(inst[i]))
-							{
-								x2 = x2*10 + (inst[i] - '0');
-								++i;
-							}
-							isImm = 0;	//since the instruction does not have an immediate
-						}
-						else
-							invalidInst();
-						if(x2 < 0 || x2 > 31)
-							invalidInst();
-					}
-					
-					if(xreg[xd]<=xreg[x2])
-					{
-						i ++;
-						while(inst[i] == ' ' || inst[i] == '\t')
-							++i;
-						// Reading the label which bgt has to jump to
-						int label_init = i;
-						while(inst[i] != '\0' && inst[i] != ' ' && inst[i] != '\t')
-							++i;
-						pc = getPcForLabel(str, b+label_init, b+i) - 1;  // Subtract 1 so that after the instruction, when pc is incremented with pc++ we will reach the correct instruction
-					}
-				}
+				break;
 
 
 
-
-
-
-
-        case '.':if(inst[i+1] == 'p' && inst[i+2] == 'r' && inst[i+3] == 'i' && inst[i+4] == 'n' && inst[i+5] == 't' && (inst[i+6] == ' ' || inst[i+6] == '\t'))	// .print
+        case '.':  if(inst[i+1] == 'p' && inst[i+2] == 'r' && inst[i+3] == 'i' && inst[i+4] == 'n' && inst[i+5] == 't' && (inst[i+6] == ' ' || inst[i+6] == '\t'))	// .print
 				{
 					i += 7;
 					// This loop will print all the registers that are to be printed
@@ -1067,7 +1142,7 @@ void executeInstruction(void)
 							i++;
 						if(inst[i] == 's' && inst[i+1] == 'p')
 						{
-							xd = 30;
+							xd = 2;
 							i += 2;
 						}
 						else
@@ -1095,16 +1170,15 @@ void executeInstruction(void)
 						}
 						if(xd < 0 || xd > 31)
 							invalidInst();
-						printf("r%-2d: %ld\n",xd, xreg[xd]);
+						printf("r%-2d: %lld\n",xd, xreg[xd]);
 						while(inst[i] == ' ' || inst[i] == '\t')
-							i++;					
+							i++;
 						if(inst[i] != ',')
 							break;
 						++i;
 					}
     			}
 
-			
     }
 }
 
@@ -1302,12 +1376,12 @@ void getReg3Add(char* inst, int i)
 
 void getReg2Add(char* inst, int i)
 {
-	//Code to extract register number of xd
+	//Code to extract register number of rd
 	while(inst[i] == ' ' || inst[i] == '\t')
 		i++;
 	if(inst[i] == 's' && inst[i+1] == 'p')
 	{
-		xd = 30;
+		xd = 2;
 		i += 2;
 	}
 	else
@@ -1541,6 +1615,148 @@ int getPcForLabel(char* str, int i, int j)
 	invalidInst();
 }
 
+void getLdSt(char* inst, int i)		// instruction is of the form rd, imm[rs1]
+{
+	//Code to extract register number of rd
+	while(inst[i] == ' ' || inst[i] == '\t')
+		i++;
+	if(inst[i] == 's' && inst[i+1] == 'p')
+	{
+		xd = 2;
+		i += 2;
+	}
+	else
+	{
+		if(inst[i] != 'x')
+			invalidInst();
+		++i;
+		if(isdigit(inst[i]))
+		{
+			xd = inst[i] - '0';
+			++i;
+			if(isdigit(inst[i]))
+			{
+				xd = xd*10 + (inst[i] - '0');
+				++i;
+			}
+		}
+		else
+			invalidInst();
+	}
+	if(xd < 0 || xd > 31)
+		invalidInst();
+
+
+	//Code to extract register number of imm
+	while(inst[i] == ' ' || inst[i] == '\t')
+		i++;
+	if(inst[i] != ',')
+		invalidInst();
+	++i;
+	while(inst[i] == ' ' || inst[i] == '\t')
+		i++;
+
+	if(inst[i] == '[')		 // if we are using just register indirect mode of addressing
+		imm = 0;
+
+	else if(inst[i] == '0' && inst[i+1] == 'x')	// if we have a hexadecimal immediate
+	{
+		i = i + 2;
+		while(inst[i] == ' ' || inst[i] == '\t')
+			++i;
+		if(inst[i] == '[' || inst[i] == '\0')
+			invalidInst();
+		int hexIndex = 0;
+		while(inst[i] != '[' && hexIndex < 4)
+		{
+			hexImm[hexIndex++] = dec(inst[i++]);
+			while(inst[i] == ' ' || inst[i] == '\t')
+				++i;
+		}
+		if(inst[i] != '[')
+			invalidInst();
+		imm = 0;
+		int q = 0;
+		while(q < hexIndex)
+			imm = 16*imm + hexImm[q++];
+		if(hexIndex == 4)
+		{
+			if(hexImm[0] >= 8)
+				imm -= 65536;
+		}
+	}
+
+	else if(isdigit(inst[i]))	// if we have a positive decimal immediate
+	{
+		imm = 0;
+		while(isdigit(inst[i]))
+		{
+			imm = imm*10 + (inst[i] - '0');
+			i++;
+		}
+		if(imm > 32767)
+			invalidInst();		//The largest positive number in 16 bit signed numbers is 0x7FFF = 32767
+	}
+
+	else if(inst[i] == '-')		// if we have a negative decimal immediate
+	{
+		i++;
+		while(inst[i] == ' ' || inst[i] == '\t')
+			++i;
+		imm = 0;
+		while(isdigit(inst[i]))
+		{
+			imm = imm*10 + (inst[i] - '0');
+			i++;
+		}
+		imm = -imm;
+		if(imm < -32768)
+			invalidInst();	// Since the smallest negative number in 16 bit signed numbers is 0x8000 = -32768
+	}
+
+	else
+		invalidInst();
+
+
+	//Code to extract register number of rs1
+	while(inst[i] == ' ' || inst[i] == '\t')
+		i++;
+	if(inst[i] != '[')
+		invalidInst();
+	++i;
+	while(inst[i] == ' ' || inst[i] == '\t')
+		i++;
+	if(inst[i] == 's' && inst[i+1] == 'p')
+	{
+		x1 = 2;
+		i += 2;
+		isImm = 0;
+	}
+	else
+	{
+		if(inst[i] != 'x')
+			invalidInst();
+		++i;
+		if(isdigit(inst[i]))
+		{
+			x1 = inst[i] - '0';
+			++i;
+			if(isdigit(inst[i]))
+			{
+				x1 = x1*10 + (inst[i] - '0');
+				++i;
+			}
+		}
+		else
+			invalidInst();
+	}
+	if(x1 < 0 || x1 > 31)
+		invalidInst();
+	while(inst[i] == ' ' || inst[i] == '\t')
+		i++;
+	if(inst[i] != ']')
+		invalidInst();
+}
 
 void invalidInst(void)
 {
