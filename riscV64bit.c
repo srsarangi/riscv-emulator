@@ -442,9 +442,8 @@ void executeInstruction(void)
 					invalidInst();
 				   else
 				   {
-					  unsigned long int b;
-					   if (xreg[x1] < 0)
-						   b = 4294967296+xreg[x1];
+					  unsigned long long b;
+					  b = (unsigned long long)xreg[x1];
 					   xreg[xd] = b >> xreg[x2];
 				   }
 			     }
@@ -455,9 +454,8 @@ void executeInstruction(void)
 				   getReg3Add(inst, i);
 				   if (isImm)
 				   {
-					   unsigned long int b;
-					   if (xreg[x1] < 0)
-						   b = 4294967296+xreg[x1];
+					   unsigned long long b;
+						b = (unsigned long long)xreg[x1];
 					   xreg[xd] = b >> imm;
 				   }
 				else
@@ -636,7 +634,7 @@ void executeInstruction(void)
 				  {
 					  case 7:
 					     Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]&0x00ffffffffffffff;
-						 Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[x1]<<y*56);
+						 Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[x1]<<56);
 						 Mem[(xreg[x1]+imm)/8+1]=Mem[(xreg[x1]+imm)/8+1]&0xff00000000000000;
 						 Mem[(xreg[x1]+imm)/8+1]=Mem[(xreg[x1]+imm)/8+1]|(xreg[x1]>>8);
 						 break;
@@ -680,6 +678,69 @@ void executeInstruction(void)
 					     Mem[(xreg[x1]+imm)/8]=xreg[xd];
 				  }
 				}
+			     else if (inst[i + 1] =='l' && inst[i + 2] =='t'&&(inst[i+3]==' '||inst[i+3]=='\t'))
+		         {
+		        	i = i + 3;
+			     if (inst[i] == ' ' || inst[i] == '\t')  //slt
+			    {
+				    ++i;
+			    	m = 0;
+				    getReg3Add(inst, i);
+				   if (isImm)
+					invalidInst();
+				   else
+				   {
+					   if (xreg[x1] < xreg[x2])
+					   xreg[xd] = 1;
+					   else
+					   xreg[xd]=0;
+				   }
+			     }
+				 }
+				 else if (inst[i + 1] =='l' && inst[i + 2] =='t' && inst[i+3]=='i'&&(inst[i+4]==' '||inst[i+4]=='\t'))
+		         {
+		        	i = i + 4;
+			     if (inst[i] == ' ' || inst[i] == '\t')  //slti
+			    {
+				    ++i;
+			    	m = 0;
+				    getReg3Add(inst, i);
+					   if (xreg[x1] < imm)
+					   xreg[xd] = 1;
+					   else
+					   xreg[xd]=0;
+			     }
+				 }
+				  else if (inst[i + 1] =='l' && inst[i + 2] =='t' && inst[i+3]=='u')
+		         {
+		        	i = i + 4;
+			     if (inst[i] == ' ' || inst[i] == '\t')  //sltu
+			    {
+				    ++i;
+				    getReg3Add(inst, i);
+					if (isImm)
+					invalidInst();
+					else{
+					   if ((unsigned long long)xreg[x1] < (unsigned long long)xreg[x2])
+					   xreg[xd] = 1;
+					   else
+					   xreg[xd]=0;
+					}
+			     }
+				 }
+				 else if (inst[i + 1] =='l' && inst[i + 2] =='t' && inst[i+3]=='i' && inst[i+4]=='u')
+		         {
+		        	i = i + 5;
+			     if (inst[i] == ' ' || inst[i] == '\t')  //sltiu
+			    {
+				    ++i;
+				    getReg3Add(inst, i);
+					   if ((unsigned long long)xreg[x1] < (unsigned long long)imm)
+					   xreg[xd] = 1;
+					   else
+					   xreg[xd]=0;
+			     }
+				 }
 
 				
 		case 'l': if(inst[i+1]=='b'&&(inst[i+2]==' '||inst[i+2]=='\t'))
@@ -1509,7 +1570,7 @@ void executeInstruction(void)
 
 					if(inst[i] == 's' && inst[i+1] == 'p')
 					{
-						x2 = 30;
+						x2 = 2;
 						i += 2;
 						isImm = 0;
 					}
