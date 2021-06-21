@@ -83,7 +83,7 @@ int getPcForLabel(char* str, int i, int j)
 	invalidInst();
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char* argv[]) // Main Function
 {
     xreg[0]=0;
 	k = 1;
@@ -257,7 +257,7 @@ int main(int argc, char* argv[])
 	}
 	return 0;
 }
-void setPcForMain(void)
+void setPcForMain(void)  // This will Set The program Counter for the PC
 {
 	int lab_c = 0;
 	int i, j;
