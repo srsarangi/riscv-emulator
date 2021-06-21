@@ -8,7 +8,7 @@ extern long long xd, x1, x2, imm;
 extern int pc;
 extern char* str;
 extern int b;
-int getRegBranch(char *inst, int i)   // function that extract register number of both source register of Conditional Branch Instructions
+int getRegBranch(char *inst, int i)   // Arguments:(instruction, index) | function that extract register number of both source register of Conditional Branch Instructions
 {
     //code to extract index of source register rs1
     if(inst[i] == 's' && inst[i+1] == 'p')
@@ -73,7 +73,7 @@ int getRegBranch(char *inst, int i)   // function that extract register number o
 	invalidInst();
 	return i;  // retuns index after both source register
 }
-void BEQ(char *inst, int i) // function that sets pc to specified label if content of both source register is equal
+void BEQ(char *inst, int i) // Arguments:(instruction, index) | function that sets pc to specified label if content of both source register is equal
 {
 	 i=getRegBranch(inst,i);  // to find index of both source register
     while(inst[i]==' '||inst[i]=='\t')
@@ -107,7 +107,7 @@ void BEQ(char *inst, int i) // function that sets pc to specified label if conte
     }
 	}
 }
-void BGE(char *inst, int i) // function that sets pc to specified label if greater than or equal
+void BGE(char *inst, int i) // Arguments:(instruction, index) | function that sets pc to specified label if greater than or equal
 {
     i=getRegBranch(inst,i);  // to find index of both source register
     while(inst[i]==' '||inst[i]=='\t')
@@ -141,7 +141,7 @@ void BGE(char *inst, int i) // function that sets pc to specified label if great
     }
 	}
 }
-void BGEU(char *inst, int i) // function that sets pc to specified label if greater than or equal unsigned
+void BGEU(char *inst, int i) // Arguments:(instruction, index) | function that sets pc to specified label if greater than or equal unsigned
 {
     i=getRegBranch(inst,i);  // to find index of both source register
 	while(inst[i]==' '||inst[i]=='\t')
@@ -175,7 +175,7 @@ void BGEU(char *inst, int i) // function that sets pc to specified label if grea
     }
 	}
 }
-void BNE(char *inst, int i) // function that sets pc to specified label if content of both register is not equal
+void BNE(char *inst, int i) // Arguments:(instruction, index) | function that sets pc to specified label if content of both register is not equal
 {
     i=getRegBranch(inst,i);  // to find index of both source register
 	while(inst[i]==' '||inst[i]=='\t')
@@ -209,7 +209,7 @@ void BNE(char *inst, int i) // function that sets pc to specified label if conte
     }
 	}
 }
-void BLT(char *inst, int i) // function that sets pc to specified label if less than
+void BLT(char *inst, int i) //  Arguments:(instruction, index) | function that sets pc to specified label if less than
 {
     i=getRegBranch(inst,i);  // to find index of both source register
 	while(inst[i]==' '||inst[i]=='\t')
@@ -243,7 +243,7 @@ void BLT(char *inst, int i) // function that sets pc to specified label if less 
 	}
 	}
 }
-void BLTU(char *inst, int i) // function that sets pc to specified label if less than unsigned
+void BLTU(char *inst, int i) // Arguments:(instruction, index) | function that sets pc to specified label if less than unsigned
 {
     i=getRegBranch(inst,i);  // to find index of both source register
 	while(inst[i]==' '||inst[i]=='\t')
@@ -277,7 +277,7 @@ void BLTU(char *inst, int i) // function that sets pc to specified label if less
     }
 	}
 }
-void JAL(char *inst, int i)  // unconditional jump jal
+void JAL(char *inst, int i)  //  Arguments:(instruction, index) | unconditional jump jal
 {
 	if(inst[i] == 's' && inst[i+1] == 'p')
 	{
@@ -333,7 +333,7 @@ void JAL(char *inst, int i)  // unconditional jump jal
 	    pc = getPcForLabel(str, b+label_init, b+i) - 1; // calls function getPcForLabel()  that is defined in MAINFILE.C to get pc for specified label (decremets by 1 since whenn it will incremented in main() function it retains correct pc)
        }
 }
-void JALR(char *inst, int i) //function for unconditional branch instruction jalr
+void JALR(char *inst, int i) // Arguments:(instruction, index) | function for unconditional branch instruction jalr
 {
 	getLdSt(inst,i); // same instruction format as DataTransfer Instructions
 	xreg[xd]=pc++;
