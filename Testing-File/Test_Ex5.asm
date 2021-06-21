@@ -1,3 +1,4 @@
+@ RISC-V assembly code 25<<2+10
 .main:
 addi x5, x0, 25
 slli x5, x5, 2
