@@ -3,8 +3,8 @@
 addi x6, x0, 100
 addi x7, x0, 1
 add x10, x0, sp
-.loop1:
 addi x8, x0, 10
+.loop1:
 sb x8, 0(sp)
 addi sp, sp, 1
 addi x7, x7, 1
