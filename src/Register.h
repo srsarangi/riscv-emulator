@@ -2,16 +2,16 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-extern long long xd, x1, x2, imm;
-extern int isImm;
-extern int hexImm[5];
+extern long long xd, x1, x2, imm; // distination , sources and immediate value.
+extern int isImm; // check for the persence of immediate
+extern int hexImm[5]; 
 extern int k;
 void invalidInst(void)
 {
 	printf("The instruction in line number %d is INVALID.\n", k);
 	exit(0);	// EXIT the interpreter
 }
-int dec(char ch)
+int dec(char ch) // This Function is used for hexa-decimal to decimal Conversion.
 {
 	switch(ch)
 	{
@@ -56,7 +56,7 @@ int dec(char ch)
 	}
 	invalidInst();
 }
-void getReg3Add(char* inst, int i)
+void getReg3Add(char* inst, int i) // To Extract the Two source Register and One Destination Register
 {
 	//Code to extract register number of rd
 	while(inst[i] == ' ' || inst[i] == '\t')
