@@ -1,3 +1,4 @@
+@ RISC-V assembly code to find number of 1's in its binary representation like 31
 .main:
 addi x5, x0, 31
 addi x9, x0, 64
