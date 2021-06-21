@@ -1,14 +1,14 @@
-#include<stdio.h>
+#include<stdio.h> // importing all the necessary libraries
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-extern long long xreg[32];
-extern int isImm;
-extern long long xd, x1, x2, imm;
-extern int pc;
-extern char* str;
-extern int b;
-int getRegBranch(char *inst, int i)
+extern long long xreg[32];  // This is store the values of all 32 registers
+extern int isImm; // Used to check the persence of immediate
+extern long long xd, x1, x2, imm; // Distination register,source registers and immediate values
+extern int pc; // Program counter to move the commands
+extern char* str; 
+extern int b; 
+int getRegBranch(char *inst, int i)  // This function is used for getting register from the branch command and comparing them.
 {
     //code to extract register number of rs1
     if(inst[i] == 's' && inst[i+1] == 'p')
@@ -38,7 +38,7 @@ int getRegBranch(char *inst, int i)
 		invalidInst();
 
 
-		//Code to extract register number of rs2
+	//Code to extract register number of rs2
 	while(inst[i] == ' ' || inst[i] == '\t')
 		i++;
 	if(inst[i] != ',')
@@ -51,7 +51,7 @@ int getRegBranch(char *inst, int i)
 		x2 = 2;
 		i += 2;
 	}
-    else 
+    	else 
 	{
 		if(inst[i] != 'x')
 		invalidInst();
@@ -73,7 +73,7 @@ int getRegBranch(char *inst, int i)
 	invalidInst();
 	return i;
 }
-void BEQ(char *inst, int i)
+void BEQ(char *inst, int i)  // Branch if Equal
 {
 	 i=getRegBranch(inst,i);
     while(inst[i]==' '||inst[i]=='\t')
@@ -106,7 +106,7 @@ void BEQ(char *inst, int i)
     }
 	}
 }
-void BGE(char *inst, int i)
+void BGE(char *inst, int i)  // Branch Greater than or Equal.
 {
     i=getRegBranch(inst,i);
     while(inst[i]==' '||inst[i]=='\t')
@@ -139,7 +139,7 @@ void BGE(char *inst, int i)
     }
 	}
 }
-void BGEU(char *inst, int i)
+void BGEU(char *inst, int i) // Branch Greater than or equal (unsigned).
 {
     i=getRegBranch(inst,i);
 	while(inst[i]==' '||inst[i]=='\t')
@@ -172,7 +172,7 @@ void BGEU(char *inst, int i)
     }
 	}
 }
-void BNE(char *inst, int i)
+void BNE(char *inst, int i) // Branch Not Equal
 {
     i=getRegBranch(inst,i);
 	while(inst[i]==' '||inst[i]=='\t')
@@ -205,7 +205,7 @@ void BNE(char *inst, int i)
     }
 	}
 }
-void BLT(char *inst, int i)
+void BLT(char *inst, int i) // Branch Less Than
 {
     i=getRegBranch(inst,i);
 	while(inst[i]==' '||inst[i]=='\t')
@@ -238,7 +238,7 @@ void BLT(char *inst, int i)
 	}
 	}
 }
-void BLTU(char *inst, int i)
+void BLTU(char *inst, int i)  // Branch Less than Unsigned
 {
     i=getRegBranch(inst,i);
 	while(inst[i]==' '||inst[i]=='\t')
@@ -271,7 +271,7 @@ void BLTU(char *inst, int i)
     }
 	}
 }
-void JAL(char *inst, int i)
+void JAL(char *inst, int i) // JUMP AND LINK
 {
 	if(inst[i] == 's' && inst[i+1] == 'p')
 	{
@@ -327,7 +327,7 @@ void JAL(char *inst, int i)
 	    pc = getPcForLabel(str, b+label_init, b+i) - 1; 
        }	
 }
-void JALR(char *inst, int i)
+void JALR(char *inst, int i) // JUMP AND LINK REGISTER
 {
 	getLdSt(inst,i);
 	xreg[xd]=pc++;
