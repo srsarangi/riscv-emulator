@@ -1,3 +1,4 @@
+@ RISC-V assembly code to define a function to calculate exponent
 .power:
 addi x12, x0, 1
 addi x5, x0, 1
