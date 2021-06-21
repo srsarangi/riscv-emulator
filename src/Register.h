@@ -56,7 +56,7 @@ int dec(char ch)  // returns equivalent decimal value
 	}
 	invalidInst(); 
 }
-void getReg3Add(char* inst, int i)
+void getReg3Add(char* inst, int i) // Arguments:(instruction, index) | function to extract index of source and destination register and find immediate if present
 {
 	//Code to extract register number of rd
 	while(inst[i] == ' ' || inst[i] == '\t')
@@ -219,7 +219,7 @@ void getReg3Add(char* inst, int i)
 		invalidInst();
 }
 
-void getLdSt(char* inst, int i)		// instruction is of the form rd, imm[rs1]
+void getLdSt(char* inst, int i)		// Arguments:(instruction, index) | instruction is of the form rd, imm[rs1]
 {
 	//Code to extract register number of rd
 	while(inst[i] == ' ' || inst[i] == '\t')
