@@ -12,7 +12,7 @@ extern long long xreg[32];
 int b;
 extern char *str;
 extern int pc;
-void PRINT(char *inst, int i)
+void PRINT(char *inst, int i) // Print Command to print Value of register 
 {
 	while(1)
 	{
@@ -52,7 +52,7 @@ void PRINT(char *inst, int i)
 		++i;
 	}
 }
-void executeInstruction(int a, int c)
+void executeInstruction(int a, int c) // Program to Execute Instructons.
 {
 	b = a;		// b is the beginning of the instruction
 	int f = c;		// f is the end of the instruction
@@ -94,7 +94,7 @@ void executeInstruction(int a, int c)
                 invalidInst();
 				break;
 
-		case 'o': if(inst[i+1] == 'r')
+		case 'o': if(inst[i+1] == 'r')  
 				{
 					i = i + 2;
 					if(inst[i] == ' ' || inst[i] == '\t')  //OR
