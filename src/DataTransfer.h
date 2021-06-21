@@ -1,12 +1,17 @@
 #include<stdio.h>
-extern long long xreg[32]; // Used to store the value of all 32 registers.
-extern int isImm; // Used to check for the persence of Immediate.
-extern long long xd, x1, x2, imm; // Distination, Sources and immediate values
-extern long long Mem[512]; // This is the memory Allocation
+extern long long xreg[32];
+extern int isImm;
+extern long long xd, x1, x2, imm;
+extern long long Mem[512];
 int y;
-void STOREB(char *inst, int i)  //Store Byte
+void STOREB(char *inst, int i) // function to store byte in memory
 {
-	getLdSt(inst, i);
+	if((xreg[x1]+imm)>4095||(xreg[x1]+imm)<0)
+	{
+		printf("Accessing Memory out of bound"); // we have 4kb memory
+		exit(0);
+	}
+	getLdSt(inst, i); // defined in Register.h header file
 	y=(xreg[x1]+imm)%8;
 	xreg[xd]=xreg[xd]&0x00000000000000ff;
 	switch(y)
@@ -44,9 +49,14 @@ void STOREB(char *inst, int i)  //Store Byte
 		Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|xreg[xd];
     }
 }
-void STOREH(char *inst, int i)// Store Half Byte
+void STOREH(char *inst, int i) // function to store halfword in memory
 {
-    getLdSt(inst, i);
+	if((xreg[x1]+imm)>4095||(xreg[x1]+imm)<0)
+	{
+		printf("Accessing Memory out of bound"); // we have 4kb memory
+		exit(0);
+	}
+    getLdSt(inst, i);  // defined in Register.h header file
 	xreg[xd]=xreg[xd]&0x000000000000ffff;
 	y=(xreg[x1]+imm)%8;
 	switch(y)
@@ -86,9 +96,14 @@ void STOREH(char *inst, int i)// Store Half Byte
 		Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[xd]);
     }
 }
-void STOREW(char *inst, int i) // Store Word
+void STOREW(char *inst, int i) // function to store word in memory
 {
-    getLdSt(inst, i);
+	if((xreg[x1]+imm)>4095||(xreg[x1]+imm)<0)
+	{
+		printf("Accessing Memory out of bound"); // we have 4kb memory
+		exit(0);
+	}
+    getLdSt(inst, i);  // defined in Register.h header file
 	xreg[xd]=xreg[xd]&0x00000000ffffffff;
 	y=(xreg[x1]+imm)%8;
 	switch(y)
@@ -133,9 +148,14 @@ void STOREW(char *inst, int i) // Store Word
 		break;
 	}
 }
-void STORED(char *inst, int i) // Store Double
+void STORED(char *inst, int i) // function to store doubleword in memory
 {
-    getLdSt(inst, i);
+	if((xreg[x1]+imm)>4095||(xreg[x1]+imm)<0)
+	{
+		printf("Accessing Memory out of bound"); // we have 4kb memory
+		exit(0);
+	}
+    getLdSt(inst, i);  // defined in Register.h header file
 	y=(xreg[x1]+imm)%8;
 	switch(y)
 	{
@@ -185,9 +205,14 @@ void STORED(char *inst, int i) // Store Double
 		Mem[(xreg[x1]+imm)/8]=xreg[xd];
 	}
 }
-void LOADB(char *inst, int i) // Load Byte
+void LOADB(char *inst, int i)  // function to loab byte from memory to register
 {
-    getLdSt(inst, i);
+	if((xreg[x1]+imm)>4095||(xreg[x1]+imm)<0)
+	{
+		printf("Accessing Memory out of bound"); // we have 4kb memory
+		exit(0);
+	}
+    getLdSt(inst, i);  // defined in Register.h header file
 	y=(xreg[x1]+imm)%8;
     xreg[xd]=xreg[xd]&0;
     xreg[xd]=xreg[xd]|Mem[(xreg[x1]+imm)/8];
@@ -227,10 +252,15 @@ void LOADB(char *inst, int i) // Load Byte
 	if(xreg[xd]>127)
 	xreg[xd]-=256;
  }			
-void LOADH(char *inst, int i) // Load Half Byte.
+void LOADH(char *inst, int i)  // function to loab halfword from memory to register
 {
+	if((xreg[x1]+imm)>4095||(xreg[x1]+imm)<0)
+	{
+		printf("Accessing Memory out of bound"); // we have 4kb memory
+		exit(0);
+	}
 	long long c=0;
-    getLdSt(inst, i);
+    getLdSt(inst, i);  // defined in Register.h header file
     y=(xreg[x1]+imm)%8;
     xreg[xd]=xreg[xd]&0;
     xreg[xd]=xreg[xd]|Mem[(xreg[x1]+imm)/8];
@@ -274,10 +304,15 @@ void LOADH(char *inst, int i) // Load Half Byte.
 	if(xreg[xd]>32767)
 	xreg[xd]-=65536;
 }
-void LOADW(char *inst, int i) // Load Word
+void LOADW(char *inst, int i)  // function to loab word from memory to register
 {
+	if((xreg[x1]+imm)>4095||(xreg[x1]+imm)<0)
+	{
+		printf("Accessing Memory out of bound"); // we have 4kb memory
+		exit(0);
+	}
     long long c=0;
-    getLdSt(inst, i);
+    getLdSt(inst, i);  // defined in Register.h header file
 	y=(xreg[x1]+imm)%8;
 	xreg[xd]=xreg[xd]&0;
 	xreg[xd]=xreg[xd]|Mem[(xreg[x1]+imm)/8];
@@ -329,9 +364,14 @@ void LOADW(char *inst, int i) // Load Word
 	if(xreg[xd]>2147483647)
 	xreg[xd]-=4294967296;
 }
-void LOADD(char *inst, int i) // Load Double
+void LOADD(char *inst, int i) // function to loab doubleword from memory to register
 {
-    getLdSt(inst,i);
+	if((xreg[x1]+imm)>4095||(xreg[x1]+imm)<0)
+	{
+		printf("Accessing Memory out of bound"); // we have 4kb memory
+		exit(0);
+	}
+    getLdSt(inst,i);  // defined in Register.h header file
 	y=(xreg[x1]+imm)%8;
 	xreg[xd]=xreg[xd]&0;
 	long long c=0;
@@ -404,9 +444,14 @@ void LOADD(char *inst, int i) // Load Double
 		xreg[xd]=xreg[xd]|Mem[(xreg[x1]+imm)/8];
 	}
 }
-void LOADBU(char *inst, int i) // Load Byte Unsignned
+void LOADBU(char *inst, int i) // function to loab unsigned byte from memory to register
 {
-	getLdSt(inst, i);
+	if((xreg[x1]+imm)>4095||(xreg[x1]+imm)<0)
+	{
+		printf("Accessing Memory out of bound"); // we have 4kb memory
+		exit(0);
+	}
+	getLdSt(inst, i);  // defined in Register.h header file
 	y=(xreg[x1]+imm)%8;
 	xreg[xd]=xreg[xd]&0;
 	xreg[xd]=xreg[xd]|Mem[(xreg[x1]+imm)/8];
@@ -444,10 +489,15 @@ void LOADBU(char *inst, int i) // Load Byte Unsignned
 		xreg[xd]=xreg[xd]&0x00000000000000ff;
 	}
 }
-void LOADHU(char *inst, int i) // Load Half Byte Unsigned
+void LOADHU(char *inst, int i)  // function to loab unsigned halfword from memory to register
 {
+	if((xreg[x1]+imm)>4095||(xreg[x1]+imm)<0)
+	{
+		printf("Accessing Memory out of bound"); // we have 4kb memory
+		exit(0);
+	}
 	long long c=0;
-	getLdSt(inst, i);
+	getLdSt(inst, i);  // defined in Register.h header file
 	y=(xreg[x1]+imm)%8;
 	xreg[xd]=xreg[xd]&0;
 	xreg[xd]=xreg[xd]|Mem[(xreg[x1]+imm)/8];
@@ -489,9 +539,14 @@ void LOADHU(char *inst, int i) // Load Half Byte Unsigned
 		xreg[xd]=xreg[xd]&0x000000000000ffff;
 	}
 }
-void LOADWU(char *inst, int i) // Load Word Unsignned
+void LOADWU(char *inst, int i) // function to loab unsigned word from memory to register
 {
-	getLdSt(inst, i);
+	if((xreg[x1]+imm)>4095||(xreg[x1]+imm)<0)
+	{
+		printf("Accessing Memory out of bound"); // we have 4kb memory
+		exit(0);
+	}
+	getLdSt(inst, i);  // defined in Register.h header file
 	long long  c=0;
 	y=(xreg[x1]+imm)%8;
 	xreg[xd]=xreg[xd]&0;

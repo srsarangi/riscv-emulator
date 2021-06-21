@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <math.h>
-#include"Execution.h"
+#include"Execution.h" // includes header file Execution.h
 //xreg will contain the value of the thirty-two registers x0 - x31
 long long xreg[32];
 
@@ -22,11 +22,8 @@ char* str;
 // An array used to convert a hexadecimal immediate to decimal
 int hexImm[5];
 
-
 // sets pc for the main function
 void setPcForMain(void);
-
-void executeInstructions(int a, int c);
 
 // k stores the line number of the instruction
 int k;
@@ -83,7 +80,7 @@ int getPcForLabel(char* str, int i, int j)
 	invalidInst();
 }
 
-int main(int argc, char* argv[]) // Main Function
+int main(int argc, char* argv[])
 {
     xreg[0]=0;
 	k = 1;
@@ -246,18 +243,18 @@ int main(int argc, char* argv[]) // Main Function
 	int inst_count = pc;
 	lab_count = lab_no;
 	setPcForMain();
-	xreg[2] = 4095;		// setting the stack pointer to 0xFFC (the end of the memory)
+	xreg[2] = 4095;		// setting the stack pointer to 0xFFE (the end of the memory)
 	while(pc < inst_count)
 	{
 		k = instructions[pc].line;	// Line number of the current pc
-		a = instructions[pc].i;		// b is the beginning of the instruction
-	    c = instructions[pc].j;
-		executeInstruction(a,c);		// Executes the instruction corresponding to the current pc
+		a = instructions[pc].i;		// a is the beginning of the instruction
+	    c = instructions[pc].j;     // c is the ending index of the instruction
+		executeInstruction(a,c);		// calls function executeInstruction()that is defined in header file Execution.h and Executes the instruction corresponding to the current pc takes starting and ending index as argument
 		pc++;
 	}
 	return 0;
 }
-void setPcForMain(void)  // This will Set The program Counter for the PC
+void setPcForMain(void) // sets pc at Label main
 {
 	int lab_c = 0;
 	int i, j;

@@ -2,16 +2,16 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-extern long long xd, x1, x2, imm; // distination , sources and immediate value.
-extern int isImm; // check for the persence of immediate
-extern int hexImm[5]; 
+extern long long xd, x1, x2, imm;
+extern int isImm;
+extern int hexImm[5];
 extern int k;
 void invalidInst(void)
 {
 	printf("The instruction in line number %d is INVALID.\n", k);
 	exit(0);	// EXIT the interpreter
 }
-int dec(char ch) // This Function is used for hexa-decimal to decimal Conversion.
+int dec(char ch)  // returns equivalent decimal value
 {
 	switch(ch)
 	{
@@ -54,9 +54,9 @@ int dec(char ch) // This Function is used for hexa-decimal to decimal Conversion
 		case 'F': return 15;
 				   break;
 	}
-	invalidInst();
+	invalidInst(); 
 }
-void getReg3Add(char* inst, int i) // To Extract the Two source Register and One Destination Register
+void getReg3Add(char* inst, int i)
 {
 	//Code to extract register number of rd
 	while(inst[i] == ' ' || inst[i] == '\t')
@@ -271,7 +271,7 @@ void getLdSt(char* inst, int i)		// instruction is of the form rd, imm[rs1]
 		if(inst[i] == '(' || inst[i] == '\0')
 			invalidInst();
 		int hexIndex = 0;
-		while(inst[i] != '(' && hexIndex < 4)
+		while(inst[i] != '(' && hexIndex < 5)
 		{
 			hexImm[hexIndex++] = dec(inst[i++]);
 			while(inst[i] == ' ' || inst[i] == '\t')
@@ -283,11 +283,8 @@ void getLdSt(char* inst, int i)		// instruction is of the form rd, imm[rs1]
 		int q = 0;
 		while(q < hexIndex)
 			imm = 16*imm + hexImm[q++];
-		if(hexIndex == 4)
-		{
-			if(hexImm[0] >= 8)
-				imm -= 65536;
-		}
+		if(imm>524287)
+		imm-=1048576;
 	}
 
 	else if(isdigit(inst[i]))	// if we have a positive decimal immediate
@@ -298,8 +295,8 @@ void getLdSt(char* inst, int i)		// instruction is of the form rd, imm[rs1]
 			imm = imm*10 + (inst[i] - '0');
 			i++;
 		}
-		if(imm > 32767)
-			invalidInst();		//The largest positive number in 16 bit signed numbers is 0x7FFF = 32767
+		if(imm > 524287)
+			invalidInst();		//The largest positive number in 16 bit signed numbers is 0x7FFFf = 524287
 	}
 
 	else if(inst[i] == '-')		// if we have a negative decimal immediate
@@ -314,8 +311,8 @@ void getLdSt(char* inst, int i)		// instruction is of the form rd, imm[rs1]
 			i++;
 		}
 		imm = -imm;
-		if(imm < -32768)
-			invalidInst();	// Since the smallest negative number in 16 bit signed numbers is 0x8000 = -32768
+		if(imm < -524288)
+			invalidInst();	// Since the smallest negative number in 16 bit signed numbers is 0x80000 = -524288
 	}
 
 	else
