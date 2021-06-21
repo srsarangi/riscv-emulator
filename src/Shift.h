@@ -2,7 +2,7 @@
 extern long long xreg[32];
 extern int isImm;
 extern long long xd, x1, x2, imm;
-void SLL(char *inst, int i)  // function to perform left shifting (two source register)
+void SLL(char *inst, int i)  // Arguments:(instruction, index) | function to perform left shifting (two source register)
 {
     getReg3Add(inst, i);  // calls getReg3Add() that is defined in Register.h
 	if(isImm)
@@ -10,7 +10,7 @@ void SLL(char *inst, int i)  // function to perform left shifting (two source re
 	else
     xreg[xd] = xreg[x1]<<xreg[x2];
 }
-void SLLI(char *inst, int i) // function to perform left shifting (one source register one immediate)
+void SLLI(char *inst, int i) // Arguments:(instruction, index) | function to perform left shifting (one source register one immediate)
 {
     getReg3Add(inst, i);  // calls getReg3Add() that is defined in Register.h
 	if(!isImm)
@@ -18,7 +18,7 @@ void SLLI(char *inst, int i) // function to perform left shifting (one source re
 	else
     xreg[xd] = xreg[x1]<<imm;
 }
-void SRA(char *inst, int i) // function to perform arithmetic right shifting (two source register)
+void SRA(char *inst, int i) // Arguments:(instruction, index) | function to perform arithmetic right shifting (two source register)
 {
     getReg3Add(inst, i);  // calls getReg3Add() that is defined in Register.h
 	if(isImm)
@@ -26,7 +26,7 @@ void SRA(char *inst, int i) // function to perform arithmetic right shifting (tw
 	else
     xreg[xd] = xreg[x1]>>xreg[x2];
 }
-void SRAI(char *inst, int i)  // function to perform arithmetic right shifting (one source register one immediate)
+void SRAI(char *inst, int i)  // Arguments:(instruction, index) | function to perform arithmetic right shifting (one source register one immediate)
 {
     getReg3Add(inst, i);  // calls getReg3Add() that is defined in Register.h
 	if(!isImm)
@@ -34,7 +34,7 @@ void SRAI(char *inst, int i)  // function to perform arithmetic right shifting (
 	else
     xreg[xd] = xreg[x1]>>imm;
 }
-void SRL(char *inst, int i)  // function to perform logical right shifting (two source register)
+void SRL(char *inst, int i)  // Arguments:(instruction, index) | function to perform logical right shifting (two source register)
 {
     getReg3Add(inst, i);  // calls getReg3Add() that is defined in Register.h
 	if(isImm)
@@ -46,7 +46,7 @@ void SRL(char *inst, int i)  // function to perform logical right shifting (two 
 	    xreg[xd] = b >> xreg[x2];
     }
 }
-void SRLI(char *inst, int i) // function to logical right shifting (one source register one immediate)
+void SRLI(char *inst, int i) // Arguments:(instruction, index) | function to logical right shifting (one source register one immediate)
 {
     getReg3Add(inst, i);  // calls getReg3Add() that is defined in Register.h
 	if(!isImm)
@@ -58,7 +58,7 @@ void SRLI(char *inst, int i) // function to logical right shifting (one source r
 		xreg[xd] = b >> imm;
     }
 }
-void SLT(char *inst, int i) // function to set if less than (two source register)
+void SLT(char *inst, int i) // Arguments:(instruction, index) |function to set if less than (two source register)
 {
      getReg3Add(inst, i);  // calls getReg3Add() that is defined in Register.h
 	if (isImm)
@@ -71,7 +71,7 @@ void SLT(char *inst, int i) // function to set if less than (two source register
 	   xreg[xd]=0;
    }
 }
-void SLTI(char *inst, int i)  // function to set if less than (one source register one immediate)
+void SLTI(char *inst, int i)  // Arguments:(instruction, index) | function to set if less than (one source register one immediate)
 {
      getReg3Add(inst, i);  // calls getReg3Add() that is defined in Register.h
 	if (!isImm)
@@ -84,7 +84,7 @@ void SLTI(char *inst, int i)  // function to set if less than (one source regist
 	   xreg[xd]=0;
    }
 }
-void SLTU(char *inst, int i) // function to set if less than unsigned (two source register)
+void SLTU(char *inst, int i) //Arguments:(instruction, index) | function to set if less than unsigned (two source register)
 {
 	getReg3Add(inst, i);  // calls getReg3Add() that is defined in Register.h
 	if (isImm)
@@ -97,7 +97,7 @@ void SLTU(char *inst, int i) // function to set if less than unsigned (two sourc
 			   xreg[xd]=0;
 	}
 }
-void SLTIU(char *inst, int i)   // function to set if less than unsigned (one source register and immediate)
+void SLTIU(char *inst, int i)   // Arguments:(instruction, index) | function to set if less than unsigned (one source register and immediate)
 {
     getReg3Add(inst, i);  // calls getReg3Add() that is defined in Register.h
 	if (!isImm)
