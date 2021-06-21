@@ -1,3 +1,4 @@
+@ RISC-V assembly code to find factorial of 5
 .main:
 addi x7, x0, 5
 addi x5, x0, 1
