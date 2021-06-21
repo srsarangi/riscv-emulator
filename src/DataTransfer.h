@@ -4,7 +4,7 @@ extern int isImm;
 extern long long xd, x1, x2, imm;
 extern long long Mem[512];
 int y;
-void STOREB(char *inst, int i) // function to store byte in memory
+void STOREB(char *inst, int i) //  Arguments:(instruction, index) | function to store byte in memory
 {
 	if((xreg[x1]+imm)>4095||(xreg[x1]+imm)<0)
 	{
@@ -49,7 +49,7 @@ void STOREB(char *inst, int i) // function to store byte in memory
 		Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|xreg[xd];
     }
 }
-void STOREH(char *inst, int i) // function to store halfword in memory
+void STOREH(char *inst, int i) //  Arguments:(instruction, index) | function to store halfword in memory
 {
 	if((xreg[x1]+imm)>4095||(xreg[x1]+imm)<0)
 	{
@@ -96,7 +96,7 @@ void STOREH(char *inst, int i) // function to store halfword in memory
 		Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[xd]);
     }
 }
-void STOREW(char *inst, int i) // function to store word in memory
+void STOREW(char *inst, int i) //  Arguments:(instruction, index) | function to store word in memory
 {
 	if((xreg[x1]+imm)>4095||(xreg[x1]+imm)<0)
 	{
@@ -148,7 +148,7 @@ void STOREW(char *inst, int i) // function to store word in memory
 		break;
 	}
 }
-void STORED(char *inst, int i) // function to store doubleword in memory
+void STORED(char *inst, int i) // Arguments:(instruction, index) | function to store doubleword in memory
 {
 	if((xreg[x1]+imm)>4095||(xreg[x1]+imm)<0)
 	{
@@ -205,7 +205,7 @@ void STORED(char *inst, int i) // function to store doubleword in memory
 		Mem[(xreg[x1]+imm)/8]=xreg[xd];
 	}
 }
-void LOADB(char *inst, int i)  // function to loab byte from memory to register
+void LOADB(char *inst, int i)  //  Arguments:(instruction, index) | function to loab byte from memory to register
 {
 	if((xreg[x1]+imm)>4095||(xreg[x1]+imm)<0)
 	{
@@ -252,7 +252,7 @@ void LOADB(char *inst, int i)  // function to loab byte from memory to register
 	if(xreg[xd]>127)
 	xreg[xd]-=256;
  }			
-void LOADH(char *inst, int i)  // function to loab halfword from memory to register
+void LOADH(char *inst, int i)  // Arguments:(instruction, index) | function to loab halfword from memory to register
 {
 	if((xreg[x1]+imm)>4095||(xreg[x1]+imm)<0)
 	{
@@ -304,7 +304,7 @@ void LOADH(char *inst, int i)  // function to loab halfword from memory to regis
 	if(xreg[xd]>32767)
 	xreg[xd]-=65536;
 }
-void LOADW(char *inst, int i)  // function to loab word from memory to register
+void LOADW(char *inst, int i)  // Arguments:(instruction, index) | function to loab word from memory to register
 {
 	if((xreg[x1]+imm)>4095||(xreg[x1]+imm)<0)
 	{
@@ -364,7 +364,7 @@ void LOADW(char *inst, int i)  // function to loab word from memory to register
 	if(xreg[xd]>2147483647)
 	xreg[xd]-=4294967296;
 }
-void LOADD(char *inst, int i) // function to loab doubleword from memory to register
+void LOADD(char *inst, int i) // Arguments:(instruction, index) | function to loab doubleword from memory to register
 {
 	if((xreg[x1]+imm)>4095||(xreg[x1]+imm)<0)
 	{
@@ -444,7 +444,7 @@ void LOADD(char *inst, int i) // function to loab doubleword from memory to regi
 		xreg[xd]=xreg[xd]|Mem[(xreg[x1]+imm)/8];
 	}
 }
-void LOADBU(char *inst, int i) // function to loab unsigned byte from memory to register
+void LOADBU(char *inst, int i) // Arguments:(instruction, index) | function to loab unsigned byte from memory to register
 {
 	if((xreg[x1]+imm)>4095||(xreg[x1]+imm)<0)
 	{
@@ -489,7 +489,7 @@ void LOADBU(char *inst, int i) // function to loab unsigned byte from memory to 
 		xreg[xd]=xreg[xd]&0x00000000000000ff;
 	}
 }
-void LOADHU(char *inst, int i)  // function to loab unsigned halfword from memory to register
+void LOADHU(char *inst, int i)  // Arguments:(instruction, index) | function to loab unsigned halfword from memory to register
 {
 	if((xreg[x1]+imm)>4095||(xreg[x1]+imm)<0)
 	{
@@ -539,7 +539,7 @@ void LOADHU(char *inst, int i)  // function to loab unsigned halfword from memor
 		xreg[xd]=xreg[xd]&0x000000000000ffff;
 	}
 }
-void LOADWU(char *inst, int i) // function to loab unsigned word from memory to register
+void LOADWU(char *inst, int i) // Arguments:(instruction, index) | function to loab unsigned word from memory to register
 {
 	if((xreg[x1]+imm)>4095||(xreg[x1]+imm)<0)
 	{
