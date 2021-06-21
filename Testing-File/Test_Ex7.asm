@@ -1,3 +1,4 @@
+@ RISC-V assembly code to return 1 if number is perfect square
 .main:
 addi x7, x0, 16
 addi x5, x0, 0
