@@ -12,7 +12,7 @@ extern long long xreg[32];
 int b;
 extern char *str;
 extern int pc;
-void PRINT(char *inst, int i) // extract index of specified register and  prints value stored in them
+void PRINT(char *inst, int i) //  Arguments:(instruction, index) | extract index of specified register and  prints value stored in them
 {
 	while(1)
 	{
