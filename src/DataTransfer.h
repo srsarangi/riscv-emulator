@@ -1,10 +1,10 @@
 #include<stdio.h>
-extern long long xreg[32];
-extern int isImm;
-extern long long xd, x1, x2, imm;
-extern long long Mem[512];
+extern long long xreg[32]; // Used to store the value of all 32 registers.
+extern int isImm; // Used to check for the persence of Immediate.
+extern long long xd, x1, x2, imm; // Distination, Sources and immediate values
+extern long long Mem[512]; // This is the memory Allocation
 int y;
-void STOREB(char *inst, int i)
+void STOREB(char *inst, int i)  //Store Byte
 {
 	getLdSt(inst, i);
 	y=(xreg[x1]+imm)%8;
@@ -44,7 +44,7 @@ void STOREB(char *inst, int i)
 		Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|xreg[xd];
     }
 }
-void STOREH(char *inst, int i)
+void STOREH(char *inst, int i)// Store Half Byte
 {
     getLdSt(inst, i);
 	xreg[xd]=xreg[xd]&0x000000000000ffff;
@@ -86,7 +86,7 @@ void STOREH(char *inst, int i)
 		Mem[(xreg[x1]+imm)/8]=Mem[(xreg[x1]+imm)/8]|(xreg[xd]);
     }
 }
-void STOREW(char *inst, int i)
+void STOREW(char *inst, int i) // Store Word
 {
     getLdSt(inst, i);
 	xreg[xd]=xreg[xd]&0x00000000ffffffff;
@@ -133,7 +133,7 @@ void STOREW(char *inst, int i)
 		break;
 	}
 }
-void STORED(char *inst, int i)
+void STORED(char *inst, int i) // Store Double
 {
     getLdSt(inst, i);
 	y=(xreg[x1]+imm)%8;
@@ -185,7 +185,7 @@ void STORED(char *inst, int i)
 		Mem[(xreg[x1]+imm)/8]=xreg[xd];
 	}
 }
-void LOADB(char *inst, int i)
+void LOADB(char *inst, int i) // Load Byte
 {
     getLdSt(inst, i);
 	y=(xreg[x1]+imm)%8;
@@ -227,7 +227,7 @@ void LOADB(char *inst, int i)
 	if(xreg[xd]>127)
 	xreg[xd]-=256;
  }			
-void LOADH(char *inst, int i)
+void LOADH(char *inst, int i) // Load Half Byte.
 {
 	long long c=0;
     getLdSt(inst, i);
@@ -274,7 +274,7 @@ void LOADH(char *inst, int i)
 	if(xreg[xd]>32767)
 	xreg[xd]-=65536;
 }
-void LOADW(char *inst, int i)
+void LOADW(char *inst, int i) // Load Word
 {
     long long c=0;
     getLdSt(inst, i);
@@ -329,7 +329,7 @@ void LOADW(char *inst, int i)
 	if(xreg[xd]>2147483647)
 	xreg[xd]-=4294967296;
 }
-void LOADD(char *inst, int i)
+void LOADD(char *inst, int i) // Load Double
 {
     getLdSt(inst,i);
 	y=(xreg[x1]+imm)%8;
@@ -404,7 +404,7 @@ void LOADD(char *inst, int i)
 		xreg[xd]=xreg[xd]|Mem[(xreg[x1]+imm)/8];
 	}
 }
-void LOADBU(char *inst, int i)
+void LOADBU(char *inst, int i) // Load Byte Unsignned
 {
 	getLdSt(inst, i);
 	y=(xreg[x1]+imm)%8;
@@ -444,7 +444,7 @@ void LOADBU(char *inst, int i)
 		xreg[xd]=xreg[xd]&0x00000000000000ff;
 	}
 }
-void LOADHU(char *inst, int i)
+void LOADHU(char *inst, int i) // Load Half Byte Unsigned
 {
 	long long c=0;
 	getLdSt(inst, i);
@@ -489,7 +489,7 @@ void LOADHU(char *inst, int i)
 		xreg[xd]=xreg[xd]&0x000000000000ffff;
 	}
 }
-void LOADWU(char *inst, int i)
+void LOADWU(char *inst, int i) // Load Word Unsignned
 {
 	getLdSt(inst, i);
 	long long  c=0;
