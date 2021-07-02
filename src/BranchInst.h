@@ -4,78 +4,45 @@
 #include <ctype.h>
 extern long long xreg[32];
 extern int isImm;
-extern long long xd, x1, x2, imm;
+extern int xd, x1, x2, imm;
 extern int pc;
 extern char* str;
 extern int b;
-int getRegBranch(char *inst, int i)   // Arguments:(instruction, index) | function that extract register number of both source register of Conditional Branch Instructions
+extern int lab_count;
+extern int inst_count;
+struct label
 {
-    //code to extract index of source register rs1
-    if(inst[i] == 's' && inst[i+1] == 'p')
+	int i;  	  // starting index of label
+	int j;  	  // ending index of label
+	int inst_no;  // inst_no this label points to
+};
+
+// An array of label structs of the program
+extern struct label *labels;
+
+int getPcForLabel(char* str, int i, int j)
+{
+	int lab_c = 0;
+	int li, lj;
+	// Search for that label which has the same name as the label in the instruction
+	while(lab_c < lab_count)
 	{
-		x1 = 2;
-		i += 2;
-	}
-	else
-	{
-	    if(inst[i] != 'x')
-		invalidInst();
-		++i;
-		if(isdigit(inst[i])) // if immediate
+		int k;
+		li = labels[lab_c].i;
+		lj = labels[lab_c].j;
+		if((j-i) == (lj-li))
 		{
-		    x1 = inst[i] - '0';
-			++i;
-			if(isdigit(inst[i]))
-			{
-				x1 = x1*10 + (inst[i] - '0');
-				++i;
-			}
+			if(strncmp(&str[i],&str[li],j-i) == 0)
+				return labels[lab_c].inst_no;
 		}
-		else
-		invalidInst();
-		}
-		if(x1 < 0 || x1 > 31)
-		invalidInst();
-
-
-		//Code to extract index of source register rs2
-	while(inst[i] == ' ' || inst[i] == '\t')
-		i++;
-	if(inst[i] != ',')
-		invalidInst();
-	++i;
-	while(inst[i] == ' ' || inst[i] == '\t')
-		i++;
-	if(inst[i] == 's' && inst[i+1] == 'p')
-	{
-		x2 = 2;
-		i += 2;
+		lab_c++;
 	}
-    else 
-	{
-		if(inst[i] != 'x')
-		invalidInst();
-		++i;
-	    if(isdigit(inst[i]))
-	    {
-		    x2 = inst[i] - '0';
-		    ++i;
-		    if(isdigit(inst[i]))
-			{
-			    x2 = x2*10 + (inst[i] - '0');
-				++i;
-			}
-		}
-	else
+	printf("The label does not exist !!!\n");
 	invalidInst();
-	}
-	if(x2 < 0 || x2 > 31)
-	invalidInst();
-	return i;  // retuns index after both source register
 }
-void BEQ(char *inst, int i) // Arguments:(instruction, index) | function that sets pc to specified label if content of both source register is equal
+void BEQ(char *inst, int i) // function that sets pc to specified label if content of both source register is equal
 {
-	 i=getRegBranch(inst,i);  // to find index of both source register
+	i=Btype(inst,i);  // to find index of both source register
     while(inst[i]==' '||inst[i]=='\t')
 	++i;
 	if(inst[i]!=',')
@@ -97,6 +64,8 @@ void BEQ(char *inst, int i) // Arguments:(instruction, index) | function that se
 		}
 		pc=pc+d/4;
 		pc--;
+		if(pc>=inst_count)
+		invalidInst();
 	}
     else
 	{
@@ -107,9 +76,9 @@ void BEQ(char *inst, int i) // Arguments:(instruction, index) | function that se
     }
 	}
 }
-void BGE(char *inst, int i) // Arguments:(instruction, index) | function that sets pc to specified label if greater than or equal
+void BGE(char *inst, int i) // function that sets pc to specified label if greater than or equal
 {
-    i=getRegBranch(inst,i);  // to find index of both source register
+    i=Btype(inst,i);  // to find index of both source register
     while(inst[i]==' '||inst[i]=='\t')
 	++i;
 	if(inst[i]!=',')
@@ -131,6 +100,8 @@ void BGE(char *inst, int i) // Arguments:(instruction, index) | function that se
 		}
 		pc=pc+d/4;
 		pc--;
+		if(pc>=inst_count)
+		invalidInst();
 	}
     else
 	{
@@ -141,9 +112,9 @@ void BGE(char *inst, int i) // Arguments:(instruction, index) | function that se
     }
 	}
 }
-void BGEU(char *inst, int i) // Arguments:(instruction, index) | function that sets pc to specified label if greater than or equal unsigned
+void BGEU(char *inst, int i) // function that sets pc to specified label if greater than or equal unsigned
 {
-    i=getRegBranch(inst,i);  // to find index of both source register
+    i=Btype(inst,i);  // to find index of both source register
 	while(inst[i]==' '||inst[i]=='\t')
 	++i;
 	if(inst[i]!=',')
@@ -165,6 +136,8 @@ void BGEU(char *inst, int i) // Arguments:(instruction, index) | function that s
 		}
 		pc=pc+d/4;
 		pc--;
+		if(pc>=inst_count)
+		invalidInst();
 	}
     else
 	{
@@ -175,9 +148,9 @@ void BGEU(char *inst, int i) // Arguments:(instruction, index) | function that s
     }
 	}
 }
-void BNE(char *inst, int i) // Arguments:(instruction, index) | function that sets pc to specified label if content of both register is not equal
+void BNE(char *inst, int i) // function that sets pc to specified label if content of both register is not equal
 {
-    i=getRegBranch(inst,i);  // to find index of both source register
+    i=Btype(inst,i);  // to find index of both source register
 	while(inst[i]==' '||inst[i]=='\t')
 	++i;
 	if(inst[i]!=',')
@@ -199,6 +172,8 @@ void BNE(char *inst, int i) // Arguments:(instruction, index) | function that se
 		}
 		pc=pc+d/4;
 		pc--;
+		if(pc>=inst_count)
+		invalidInst();
 	}
     else
 	{
@@ -209,9 +184,9 @@ void BNE(char *inst, int i) // Arguments:(instruction, index) | function that se
     }
 	}
 }
-void BLT(char *inst, int i) //  Arguments:(instruction, index) | function that sets pc to specified label if less than
+void BLT(char *inst, int i) // function that sets pc to specified label if less than
 {
-    i=getRegBranch(inst,i);  // to find index of both source register
+    i=Btype(inst,i);  // to find index of both source register
 	while(inst[i]==' '||inst[i]=='\t')
 	++i;
 	if(inst[i]!=',')
@@ -233,6 +208,8 @@ void BLT(char *inst, int i) //  Arguments:(instruction, index) | function that s
 		}
 		pc=pc+d/4;
 		pc--; //decremets by 1 since whenn it will incremented in main() function it retains correct pc
+		if(pc>=inst_count)
+		invalidInst();
 	}
     else
 	{
@@ -243,9 +220,9 @@ void BLT(char *inst, int i) //  Arguments:(instruction, index) | function that s
 	}
 	}
 }
-void BLTU(char *inst, int i) // Arguments:(instruction, index) | function that sets pc to specified label if less than unsigned
+void BLTU(char *inst, int i) // function that sets pc to specified label if less than unsigned
 {
-    i=getRegBranch(inst,i);  // to find index of both source register
+    i=Btype(inst,i);  // to find index of both source register
 	while(inst[i]==' '||inst[i]=='\t')
 	++i;
 	if(inst[i]!=',')
@@ -267,6 +244,8 @@ void BLTU(char *inst, int i) // Arguments:(instruction, index) | function that s
 		}
 		pc=pc+d/4;
 		pc--;  //decremets by 1 since whenn it will incremented in main() function it retains correct pc
+		if(pc>=inst_count)
+		invalidInst();
 	}
     else
 	{
@@ -277,34 +256,10 @@ void BLTU(char *inst, int i) // Arguments:(instruction, index) | function that s
     }
 	}
 }
-void JAL(char *inst, int i)  //  Arguments:(instruction, index) | unconditional jump jal
+void JAL(char *inst, int i)  // unconditional jump jal
 {
-	if(inst[i] == 's' && inst[i+1] == 'p')
-	{
-		x1 = 2;
-		i += 2;
-	}
-	else
-	{
-	    if(inst[i] != 'x')
-		invalidInst();
-		++i;
-		if(isdigit(inst[i]))
-		{
-		    x1 = inst[i] - '0';
-			++i;
-			if(isdigit(inst[i]))
-			{
-				x1 = x1*10 + (inst[i] - '0');
-				++i;
-			}
-		}
-		else
-		invalidInst();
-		}
-		if(x1 < 0 || x1 > 31)
-		invalidInst();
-		xreg[x1]=(pc+1)*4;
+	   i=Utype(inst, i); // to find index of destination register
+		xreg[xd]=(pc+1)*4;
 		while(inst[i] == ' ' || inst[i] == '\t')
 			++i;
 		if(inst[i]!=',')
@@ -324,6 +279,8 @@ void JAL(char *inst, int i)  //  Arguments:(instruction, index) | unconditional 
 		}
 		pc=pc+d/4;
 		pc--;     //decremets by 1 since whenn it will incremented in main() function it retains correct pc
+		if(pc>=inst_count)
+		invalidInst();
 	   }
        else
 	   {
@@ -333,13 +290,14 @@ void JAL(char *inst, int i)  //  Arguments:(instruction, index) | unconditional 
 	    pc = getPcForLabel(str, b+label_init, b+i) - 1; // calls function getPcForLabel()  that is defined in MAINFILE.C to get pc for specified label (decremets by 1 since whenn it will incremented in main() function it retains correct pc)
        }
 }
-void JALR(char *inst, int i) // Arguments:(instruction, index) | function for unconditional branch instruction jalr
+void JALR(char *inst, int i) //function for unconditional branch instruction jalr
 {
-	getLdSt(inst,i); // same instruction format as DataTransfer Instructions
-	xreg[xd]=pc++;
+	ItypeL(inst,i); // to find index of destination and source register
+	xreg[xd]=(pc++)*4;
 	if(xd==0)
 	xreg[xd]=0;
 	pc=(xreg[x1]+imm)/4;
 	pc--; //decremets by 1 since whenn it will incremented in main() function it retains correct pc
+	if(pc>=inst_count)
+	invalidInst();
 }
-

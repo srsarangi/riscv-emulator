@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-extern long long xd, x1, x2, imm;
+extern int xd, x1, x2, imm;
 extern int isImm;
 extern int hexImm[5];
 extern int k;
@@ -56,7 +56,145 @@ int dec(char ch)  // returns equivalent decimal value
 	}
 	invalidInst(); 
 }
-void getReg3Add(char* inst, int i) // Arguments:(instruction, index) | function to extract index of source and destination register and find immediate if present
+void Stype(char* inst, int i)		// instruction is of the form rs1, imm[rs2]
+{
+	//Code to extract register number of rs1
+	while(inst[i] == ' ' || inst[i] == '\t')
+		i++;
+	if(inst[i] == 's' && inst[i+1] == 'p')
+	{
+		x1 = 2;
+		i += 2;
+	}
+	else
+	{
+		if(inst[i] != 'x')
+			invalidInst();
+		++i;
+		if(isdigit(inst[i]))
+		{
+			x1 = inst[i] - '0';
+			++i;
+			if(isdigit(inst[i]))
+			{
+				x1 = x1*10 + (inst[i] - '0');
+				++i;
+			}
+		}
+		else
+			invalidInst();
+	}
+	if(x1 < 0 || x1 > 31)
+		invalidInst();
+
+
+	//Code to extract register number of rs2 and value of immediate
+	while(inst[i] == ' ' || inst[i] == '\t')
+		i++;
+	if(inst[i] != ',')
+		invalidInst();
+	++i;
+	while(inst[i] == ' ' || inst[i] == '\t')
+		i++;
+
+	if(inst[i] == '(')		 // if we are using just register indirect mode of addressing
+		imm = 0;
+
+	else if(inst[i] == '0' && inst[i+1] == 'x')	// if we have a hexadecimal immediate
+	{
+		i = i + 2;
+		while(inst[i] == ' ' || inst[i] == '\t')
+			++i;
+		if(inst[i] == '(' || inst[i] == '\0')
+			invalidInst();
+		int hexIndex = 0;
+		while(inst[i] != '(' && hexIndex < 3)
+		{
+			hexImm[hexIndex++] = dec(inst[i++]);
+			while(inst[i] == ' ' || inst[i] == '\t')
+				++i;
+		}
+		if(inst[i] != '(')
+			invalidInst();
+		imm = 0;
+		int q = 0;
+		while(q < hexIndex)
+			imm = 16*imm + hexImm[q++];
+		if(imm>2047)
+		imm-=4096;
+	}
+
+	else if(isdigit(inst[i]))	// if we have a positive decimal immediate
+	{
+		imm = 0;
+		while(isdigit(inst[i]))
+		{
+			imm = imm*10 + (inst[i] - '0');
+			i++;
+		}
+		if(imm > 2047)
+			invalidInst();		//The largest positive number in 16 bit signed numbers is 0x7FF = 2047
+	}
+
+	else if(inst[i] == '-')		// if we have a negative decimal immediate
+	{
+		i++;
+		while(inst[i] == ' ' || inst[i] == '\t')
+			++i;
+		imm = 0;
+		while(isdigit(inst[i]))
+		{
+			imm = imm*10 + (inst[i] - '0');
+			i++;
+		}
+		imm = -imm;
+		if(imm < -2048)
+			invalidInst();	// Since the smallest negative number in 16 bit signed numbers is 0x800 = -2048
+	}
+
+	else
+		invalidInst();
+
+	//Code to extract register number of rs2
+	while(inst[i] == ' ' || inst[i] == '\t')
+		i++;
+	if(inst[i] != '(')
+		invalidInst();
+	++i;
+	while(inst[i] == ' ' || inst[i] == '\t')
+		i++;
+	if(inst[i] == 's' && inst[i+1] == 'p')
+	{
+		x2 = 2;
+		i += 2;
+		isImm = 0;
+	}
+	else
+	{
+		if(inst[i] != 'x')
+			invalidInst();
+		++i;
+		if(isdigit(inst[i]))
+		{
+			x2= inst[i] - '0';
+			++i;
+			if(isdigit(inst[i]))
+			{
+				x2 = x2*10 + (inst[i] - '0');
+				++i;
+			}
+		}
+		else
+			invalidInst();
+	}
+	if(x1 < 0 || x1 > 31)
+		invalidInst();
+	while(inst[i] == ' ' || inst[i] == '\t')
+		i++;
+	if(inst[i] != ')')
+		invalidInst();
+}
+void Rtype(char *inst, int i)
 {
 	//Code to extract register number of rd
 	while(inst[i] == ' ' || inst[i] == '\t')
@@ -88,8 +226,8 @@ void getReg3Add(char* inst, int i) // Arguments:(instruction, index) | function 
 	}
 	if(xd < 0 || xd > 31)
 		invalidInst();
-
-	//Code to extract register number of rs1
+     
+	 //Code to extract register number of rs1
 	while(inst[i] == ' ' || inst[i] == '\t')
 		i++;
 	if(inst[i] != ',')
@@ -123,7 +261,7 @@ void getReg3Add(char* inst, int i) // Arguments:(instruction, index) | function 
 	if(x1 < 0 || x1 > 31)
 		invalidInst();
 
-	//Code to extract register number of rs2/imm
+		//Code to extract register number of rs2
 	while(inst[i] == ' ' || inst[i] == '\t')
 		i++;
 	if(inst[i] != ',')
@@ -137,8 +275,10 @@ void getReg3Add(char* inst, int i) // Arguments:(instruction, index) | function 
 		i += 2;
 		isImm = 0;
 	}
-	else if(inst[i] == 'x')	// if we have rs2
+	else
 	{
+     if(inst[i] != 'x')	// if we have rs2
+	 invalidInst();
 		++i;
 		if(isdigit(inst[i]))
 		{
@@ -149,15 +289,88 @@ void getReg3Add(char* inst, int i) // Arguments:(instruction, index) | function 
 				x2 = x2*10 + (inst[i] - '0');
 				++i;
 			}
-			isImm = 0;	//since the instruction does not have an immediate
+		}
+		else
+		invalidInst();
+	}
+	if(x2 < 0 || x2 > 31)
+		invalidInst();
+}
+void Itype(char *inst, int i)
+{
+	//Code to extract register number of rd
+	while(inst[i] == ' ' || inst[i] == '\t')
+		i++;
+	if(inst[i] == 's' && inst[i+1] == 'p')
+	{
+		xd = 2;
+		i += 2;
+	}
+	
+	else
+	{
+		if(inst[i] != 'x')
+			invalidInst();
+			
+		++i;
+		if(isdigit(inst[i]))
+		{
+			xd = inst[i] - '0';
+			++i;
+			if(isdigit(inst[i]))
+			{
+				xd = xd*10 + (inst[i] - '0');
+				++i;
+			}
 		}
 		else
 			invalidInst();
-		if(x2 < 0 || x2 > 31)
+	}
+	if(xd < 0 || xd > 31)
+		invalidInst();
+     
+	 //Code to extract register number of rs1
+	while(inst[i] == ' ' || inst[i] == '\t')
+		i++;
+	if(inst[i] != ',')
+		invalidInst();
+	++i;
+	while(inst[i] == ' ' || inst[i] == '\t')
+		i++;
+	if(inst[i] == 's' && inst[i+1] == 'p')
+	{
+		x1 = 2;
+		i += 2;
+	}
+	else
+	{
+		if(inst[i] != 'x')
+			invalidInst();
+		++i;
+		if(isdigit(inst[i]))
+		{
+			x1 = inst[i] - '0';
+			++i;
+			if(isdigit(inst[i]))
+			{
+				x1 = x1*10 + (inst[i] - '0');
+				++i;
+			}
+		}
+		else
 			invalidInst();
 	}
+	if(x1 < 0 || x1 > 31)
+		invalidInst();
 
-	else if(inst[i] == '0' && inst[i+1] == 'x')	// if we have a hexadecimal immediate
+	while(inst[i] == ' ' || inst[i] == '\t')
+		i++;
+	if(inst[i] != ',')
+		invalidInst();
+	++i;
+	while(inst[i] == ' ' || inst[i] == '\t')
+		i++;
+    if(inst[i] == '0' && inst[i+1] == 'x')	// if we have a hexadecimal immediate
 	{
 		i = i + 2;
 		while(inst[i] == ' ' || inst[i] == '\t')
@@ -177,12 +390,11 @@ void getReg3Add(char* inst, int i) // Arguments:(instruction, index) | function 
 		int q = 0;
 		while(q < hexIndex)
 			imm = 16*imm + hexImm[q++];
-		if(hexIndex == 3)
+		if(hexIndex == 2)
 		{
 			if(hexImm[0] >= 8)
 				imm -= 4096;
 		}
-		isImm = 1;
 	}
 
 	else if(isdigit(inst[i]))	// if we have a positive decimal immediate
@@ -195,7 +407,6 @@ void getReg3Add(char* inst, int i) // Arguments:(instruction, index) | function 
 		}
 		if(imm > 2047)
 		invalidInst();	//The largest positive number in 12 bit signed numbers is 0x7FF = 2047
-		isImm = 1;
 	}
 
 	else if(inst[i] == '-')		// if we have a negative decimal immediate
@@ -212,14 +423,11 @@ void getReg3Add(char* inst, int i) // Arguments:(instruction, index) | function 
 		imm = -imm;
 		if(imm < -2048)
 			invalidInst();	// Since the smallest negative number in 12 bit signed numbers is 0x8000 = -2048
-		isImm = 1;
 	}
-
 	else
 		invalidInst();
 }
-
-void getLdSt(char* inst, int i)		// Arguments:(instruction, index) | instruction is of the form rd, imm[rs1]
+void ItypeL(char *inst, int i)
 {
 	//Code to extract register number of rd
 	while(inst[i] == ' ' || inst[i] == '\t')
@@ -271,7 +479,7 @@ void getLdSt(char* inst, int i)		// Arguments:(instruction, index) | instruction
 		if(inst[i] == '(' || inst[i] == '\0')
 			invalidInst();
 		int hexIndex = 0;
-		while(inst[i] != '(' && hexIndex < 5)
+		while(inst[i] != '(' && hexIndex < 3)
 		{
 			hexImm[hexIndex++] = dec(inst[i++]);
 			while(inst[i] == ' ' || inst[i] == '\t')
@@ -283,8 +491,8 @@ void getLdSt(char* inst, int i)		// Arguments:(instruction, index) | instruction
 		int q = 0;
 		while(q < hexIndex)
 			imm = 16*imm + hexImm[q++];
-		if(imm>524287)
-		imm-=1048576;
+		if(imm>2047)
+		imm-=4096;
 	}
 
 	else if(isdigit(inst[i]))	// if we have a positive decimal immediate
@@ -295,8 +503,8 @@ void getLdSt(char* inst, int i)		// Arguments:(instruction, index) | instruction
 			imm = imm*10 + (inst[i] - '0');
 			i++;
 		}
-		if(imm > 524287)
-			invalidInst();		//The largest positive number in 16 bit signed numbers is 0x7FFFf = 524287
+		if(imm > 2047)
+			invalidInst();		//The largest positive number in 16 bit signed numbers is 0x7FF = 2047
 	}
 
 	else if(inst[i] == '-')		// if we have a negative decimal immediate
@@ -311,13 +519,12 @@ void getLdSt(char* inst, int i)		// Arguments:(instruction, index) | instruction
 			i++;
 		}
 		imm = -imm;
-		if(imm < -524288)
-			invalidInst();	// Since the smallest negative number in 16 bit signed numbers is 0x80000 = -524288
+		if(imm < -2048)
+			invalidInst();	// Since the smallest negative number in 16 bit signed numbers is 0x800 = -2048
 	}
 
 	else
 		invalidInst();
-
 
 	//Code to extract register number of rs1
 	while(inst[i] == ' ' || inst[i] == '\t')
@@ -357,4 +564,102 @@ void getLdSt(char* inst, int i)		// Arguments:(instruction, index) | instruction
 		i++;
 	if(inst[i] != ')')
 		invalidInst();
+}
+int Btype(char *inst, int i)
+{
+	//code to extract index of source register rs1
+	while(inst[i] == ' ' || inst[i] == '\t')
+		i++;
+	if(inst[i] == 's' && inst[i+1] == 'p')
+	{
+		x1 = 2;
+		i += 2;
+	}
+	else
+	{
+	    if(inst[i] != 'x')
+		invalidInst();
+		++i;
+		if(isdigit(inst[i])) // if immediate
+		{
+		    x1 = inst[i] - '0';
+			++i;
+			if(isdigit(inst[i]))
+			{
+				x1 = x1*10 + (inst[i] - '0');
+				++i;
+			}
+		}
+		else
+		invalidInst();
+		}
+		if(x1 < 0 || x1 > 31)
+		invalidInst();
+
+
+		//Code to extract index of source register rs2
+	while(inst[i] == ' ' || inst[i] == '\t')
+		i++;
+	if(inst[i] != ',')
+		invalidInst();
+	++i;
+	while(inst[i] == ' ' || inst[i] == '\t')
+		i++;
+	if(inst[i] == 's' && inst[i+1] == 'p')
+	{
+		x2 = 2;
+		i += 2;
+	}
+    else 
+	{
+		if(inst[i] != 'x')
+		invalidInst();
+		++i;
+	    if(isdigit(inst[i]))
+	    {
+		    x2 = inst[i] - '0';
+		    ++i;
+		    if(isdigit(inst[i]))
+			{
+			    x2 = x2*10 + (inst[i] - '0');
+				++i;
+			}
+		}
+	else
+	invalidInst();
+	}
+	if(x2 < 0 || x2 > 31)
+	invalidInst();
+	return i;  // retuns index after both source register
+}
+int Utype(char *inst, int i)
+{
+	while(inst[i] == ' ' || inst[i] == '\t')
+		i++;
+	if(inst[i] == 's' && inst[i+1] == 'p')
+	{
+		xd = 2;
+		i += 2;
+	}
+	else
+	{
+	    if(inst[i] != 'x')
+		invalidInst();
+		++i;
+		if(isdigit(inst[i]))
+		{
+		    xd = inst[i] - '0';
+			++i;
+			if(isdigit(inst[i]))
+			{
+				xd = xd*10 + (inst[i] - '0');
+				++i;
+			}
+		}
+		else
+		invalidInst();
+		}
+		if(xd < 0 || xd > 31)
+		invalidInst();
+		return i;
 }

@@ -8,7 +8,7 @@
 long long xreg[32];
 
 // xd stores destination register, x1 and x2 store the source registers and imm is the immediate
-long long xd, x1, x2, imm;
+int xd, x1, x2, imm;
 
 // Data Memory of 4096 bytes
 long long Mem[512];
@@ -37,48 +37,13 @@ int lab_no;
 // lab_count stores the number of labels in the program
 int lab_count;
 
-// A struct for each instruction
-struct instruction
-{
-	int i;		// starting index of inst
-	int j;  	// ending index of inst
-	int line;	// line in which the instruction appears
-};
+int inst_count;
 
 // An array of all instruction structs of the program (behaves somewhat like the instruction memory)
 struct instruction *instructions;
 
-// A struct for each label
-struct label
-{
-	int i;  	  // starting index of label
-	int j;  	  // ending index of label
-	int inst_no;  // inst_no this label points to
-};
-
-// An array of label structs of the program
+// An array of label structs of the program | structure of label defined in BranchInst.h header file
 struct label *labels;
-
-int getPcForLabel(char* str, int i, int j)
-{
-	int lab_c = 0;
-	int li, lj;
-	// Search for that label which has the same name as the label in the instruction
-	while(lab_c < lab_count)
-	{
-		int k;
-		li = labels[lab_c].i;
-		lj = labels[lab_c].j;
-		if((j-i) == (lj-li))
-		{
-			if(strncmp(&str[i],&str[li],j-i) == 0)
-				return labels[lab_c].inst_no;
-		}
-		lab_c++;
-	}
-	printf("The label does not exist !!!\n");
-	invalidInst();
-}
 
 int main(int argc, char* argv[])
 {
@@ -240,17 +205,16 @@ int main(int argc, char* argv[])
 		else
 			x++;
 	}
-	int inst_count = pc;
+	inst_count = pc;
 	lab_count = lab_no;
 	setPcForMain();
 	xreg[2] = 4095;		// setting the stack pointer to 0xFFE (the end of the memory)
 	while(pc < inst_count)
 	{
 		k = instructions[pc].line;	// Line number of the current pc
-		a = instructions[pc].i;		// a is the beginning of the instruction
-	    c = instructions[pc].j;     // c is the ending index of the instruction
-		executeInstruction(a,c);		// calls function executeInstruction()that is defined in header file Execution.h and Executes the instruction corresponding to the current pc takes starting and ending index as argument
+		executeInstruction();		// calls function executeInstruction()that is defined in header file Execution.h and Executes the instruction corresponding to the current pc takes starting and ending index as argument
 		pc++;
+		xreg[0]=0; // any operation can't change value of x0
 	}
 	return 0;
 }
