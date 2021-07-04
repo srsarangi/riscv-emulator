@@ -5,10 +5,10 @@ addi x5, x0, 0
 addi x6, x0, 1
 .loop:
    mul x4, x6, x6
-   beq x7, x4, .sqaure
+   beq x7, x4, .square
    addi x6, x6, 1
    blt x7, x4, .exit
-   bgt x7, x4, .loop
+   blt x4, x7, .loop
 .square:
    addi x5, x0, 1
 .exit:
