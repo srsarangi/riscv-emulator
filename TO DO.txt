@@ -1,8 +1,0 @@
-1. the input file name should as arg
-2. make a list of the opcode of risc v mention which are implemented or not
-3. sarangi book sae all the examples in risc v (all assembly code example ko risc v main convert karna hai)
-add thesr codes to github
-4. make the code modular  
-5. Add comments on each function (doing ,input,output)
-6. lots of testing 
-
