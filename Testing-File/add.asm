@@ -1,3 +1,4 @@
+@Assembly program to perform 300+200
 .main:
 	addi x20, x0, 300
 	addi x21, x0, 200
