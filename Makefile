@@ -1,5 +1,5 @@
 inst: move
-	@echo "use ./riscem <assemblyfilename> to run assembly program"
+	@echo "use ./riscem <path/assemblyfilename> to run assembly program"
 move: obj
 	@mv "MAINFILE.o" "obj"
 obj: riscem
