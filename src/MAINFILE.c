@@ -71,7 +71,6 @@ int main(int argc, char* argv[])
 	int colon_count = 0;		// colon_count will contain the number of colons in the program which decides the maximum number of labels
 	int line_count = 0;			// line_count will contain the number of lines in the program which decides the maximum number of instructions
 	int i = 0;
-	int a,c;
 	int x = fgetc(f);
 	while(x != EOF)
 	{

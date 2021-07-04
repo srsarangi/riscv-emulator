@@ -9,8 +9,6 @@ void STOREB(char *inst, int i) // function to store byte in memory
 	Stype(inst, i); // defined in Register.h header file
 	if((xreg[x2]+imm)>4095||(xreg[x2]+imm)<0)
 	{
-		printf("%d",xreg[x2]);
-		printf("%d",imm);
 		printf("Accessing Memory out of bound"); // we have 4kb memory
 		exit(0);
 	}

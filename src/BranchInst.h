@@ -27,7 +27,6 @@ int getPcForLabel(char* str, int i, int j)
 	// Search for that label which has the same name as the label in the instruction
 	while(lab_c < lab_count)
 	{
-		int k;
 		li = labels[lab_c].i;
 		lj = labels[lab_c].j;
 		if((j-i) == (lj-li))
@@ -39,14 +38,15 @@ int getPcForLabel(char* str, int i, int j)
 	}
 	printf("The label does not exist !!!\n");
 	invalidInst();
+	return -1;
 }
 void BEQ(char *inst, int i) // function that sets pc to specified label if content of both source register is equal
 {
 	i=Btype(inst,i);  // to find index of both source register
     while(inst[i]==' '||inst[i]=='\t')
-	++i;
+		++i;
 	if(inst[i]!=',')
-	invalidInst();
+		invalidInst();
 	i++;
 	while(inst[i]==' '||inst[i]=='\t')
 	++i;
@@ -80,9 +80,9 @@ void BGE(char *inst, int i) // function that sets pc to specified label if great
 {
     i=Btype(inst,i);  // to find index of both source register
     while(inst[i]==' '||inst[i]=='\t')
-	++i;
+		++i;
 	if(inst[i]!=',')
-	invalidInst();
+		invalidInst();
 	i++;
 	while(inst[i]==' '||inst[i]=='\t')
 	++i;

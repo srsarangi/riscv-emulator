@@ -13,48 +13,50 @@ void invalidInst(void)
 }
 int dec(char ch)  // returns equivalent decimal value
 {
+	int k;
 	switch(ch)
 	{
-		case '0': return 0;
+		case '0': k=0;
 				   break;
-		case '1': return 1;
+		case '1': k=1;
 				   break;
-		case '2': return 2;
+		case '2': k=2;
 				   break;
-		case '3': return 3;
+		case '3': k=3;
 				   break;
-		case '4': return 4;
+		case '4': k=4;
 				   break;
-		case '5': return 5;
+		case '5': k=5;
 				   break;
-		case '6': return 6;
+		case '6': k=6;
 				   break;
-		case '7': return 7;
+		case '7': k=7;
 				   break;
-		case '8': return 8;
+		case '8': k=8;
 				   break;
-		case '9': return 9;
+		case '9': k=9;
 				   break;
 		case 'a':
-		case 'A': return 10;
+		case 'A': k=10;
 				   break;
 		case 'b':
-		case 'B': return 11;
+		case 'B': k=11;
 				   break;
 		case 'c':
-		case 'C': return 12;
+		case 'C': k=12;
 				   break;
 		case 'd':
-		case 'D': return 13;
+		case 'D': k=13;
 				   break;
 		case 'e':
-		case 'E': return 14;
+		case 'E': k=14;
 				   break;
 		case 'f':
-		case 'F': return 15;
+		case 'F': k=15;
 				   break;
+		default: invalidInst();
 	}
-	invalidInst(); 
+	return k;
 }
 void Stype(char* inst, int i)		// instruction is of the form rs1, imm[rs2]
 {
@@ -578,7 +580,7 @@ int Btype(char *inst, int i)
 	else
 	{
 	    if(inst[i] != 'x')
-		invalidInst();
+			invalidInst();
 		++i;
 		if(isdigit(inst[i])) // if immediate
 		{
@@ -644,7 +646,7 @@ int Utype(char *inst, int i)
 	else
 	{
 	    if(inst[i] != 'x')
-		invalidInst();
+			invalidInst();
 		++i;
 		if(isdigit(inst[i]))
 		{

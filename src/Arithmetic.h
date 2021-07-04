@@ -165,5 +165,5 @@ void LUI(char *inst, int i)
 	}
 	else
 		invalidInst();
-		xreg[xd]=imm<<12;
+	xreg[xd]=imm<<12;
 }
