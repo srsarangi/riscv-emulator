@@ -1,3 +1,4 @@
+@Assembly code to print numbers from 2 to 20
 .main:
 addi x1, x0, 1
 addi x2, x0, 1

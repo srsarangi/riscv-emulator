@@ -1,3 +1,4 @@
+@Assembly code to print cubes of numbers from 1 to 10
 .main:
 addi x1, x0, 1
 addi x2, x0, 11

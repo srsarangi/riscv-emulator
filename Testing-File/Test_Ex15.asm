@@ -1,3 +1,4 @@
+@Assembly Program to print 10 multiples of 9
 .main:
 addi x1, x0, 9
 addi x2, x0, 1
