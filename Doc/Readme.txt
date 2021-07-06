@@ -1,1 +1,1 @@
-Here details about emulator is stored in multiple files.
+Here details about the riscem emulator are stored in multiple files.
