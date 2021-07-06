@@ -1,4 +1,4 @@
-Here source code for 32-bit and 64 bit RISC-V interpreter has been stored in form of multiple files. That supports following instructions:
+Here source code for the RISC-V emulator(32-bit and 64-bit support) has been stored in the form of multiple files. That supports following instructions:
 Arithmetic: add, addw, addi, addiw, sub, subw, mul, mulw, mulh, mulhu, mulhsu, div, divw, divu, divuw, rem, remw, remu, remuw, lui
 Data Transfer: sb, sh, sw, sd, lb, lbu, lh, lhu, lw, lwu, ld
 Logical: and, andi, or, ori, xor, xori
