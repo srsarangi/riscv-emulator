@@ -1,3 +1,5 @@
+#ifndef GLOBAL_VARIABLE_H
+#define GLOBAL_VARIABLE_H
 //xreg will contain the value of the thirty-two registers x0 - x31
 extern long long xreg[32];
 
@@ -50,3 +52,4 @@ struct label
 	int j;  	  // ending index of label
 	int inst_no;  // inst_no this label points to
 };
+#endif
