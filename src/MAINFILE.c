@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <math.h>
+#include"Global_Variable.h"
 #include"Execution.h" // includes header file Execution.h
 //xreg will contain the value of the thirty-two registers x0 - x31
 long long xreg[32];
@@ -37,6 +38,7 @@ int lab_no;
 // lab_count stores the number of labels in the program
 int lab_count;
 
+//inst_count stores the number of inatructions in the program
 int inst_count;
 
 // An array of all instruction structs of the program (behaves somewhat like the instruction memory)
