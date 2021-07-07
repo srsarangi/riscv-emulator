@@ -1,6 +1,5 @@
 riscem: obj/MAINFILE.o obj/Execution.o obj/Register.o obj/Arithmetic.o obj/BranchInst.o obj/Compare.o obj/DataTransfer.o obj/Logical.o obj/Shift.o
 	@gcc obj/MAINFILE.o obj/Execution.o obj/Register.o obj/Arithmetic.o obj/BranchInst.o obj/Compare.o obj/DataTransfer.o  obj/Logical.o obj/Shift.o -o riscem
-	@echo "Executable file created"
 	@echo "use ./riscem <path/assembly filename.asm> to run an assembly program"
 
 obj/MAINFILE.o: src/MAINFILE.c src/Execution.h obj src/Global_Variable.h
