@@ -1,4 +1,4 @@
-@ RISC-V assembly code to store 10 tines 100 in an array and after that retrieve and add them after that print the result
+@ RISC-V assembly code to store 10 times 100 in an array and after that retrieve and add them after that print the result
 .main:
 addi x6, x0, 100
 addi x7, x0, 1
